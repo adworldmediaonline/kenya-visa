@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Phone, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export default function Footer() {
     return (
