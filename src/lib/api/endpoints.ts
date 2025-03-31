@@ -1,4 +1,4 @@
-import apiClient from "./api_client";
+import apiClient from './api_client';
 
 export interface ApplicationStatusRequest {
   applicationId: string;
@@ -6,7 +6,7 @@ export interface ApplicationStatusRequest {
 }
 
 export interface ApplicationStatusResponse {
-  status: "PENDING" | "APPROVED" | "REJECTED" | "PROCESSING";
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'PROCESSING';
   applicationId: string;
   applicantName: string;
   submissionDate: string;
@@ -14,17 +14,254 @@ export interface ApplicationStatusResponse {
   additionalInfo?: string;
 }
 
+// Visa details interfaces
+export interface VisaDetailsRequest {
+  emailAddress: string;
+  visaType: string;
+  visaValidity: string;
+  companyReferenceNumber?: string;
+}
+
+export interface VisaDetailsResponse {
+  application: {
+    _id: string;
+  };
+  details: VisaDetailsRequest;
+}
+
+// Arrival info interfaces
+export interface ArrivalInfoRequest {
+  formId: string;
+  arrivalDate: string;
+  departureCountry: string;
+  departureCity: string;
+  airline?: string;
+  flightNumber?: string;
+  accommodationType: string;
+  accommodationName: string;
+  accommodationCity: string;
+  accommodationStreetAddress: string;
+  accommodationTelephone: string;
+}
+
+// Personal info interfaces
+export interface PersonalInfoData {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | Date;
+  gender: string;
+  nationality: string;
+  countryOfBirth: string;
+  cityOfBirth: string;
+  occupation: string;
+  phoneNumber: string;
+  address: string;
+}
+
+// Passport info interfaces
+export interface PassportInfoData {
+  passportNumber: string;
+  issueDate: string | Date;
+  expiryDate: string | Date;
+  issuingCountry: string;
+  birthplace: string;
+}
+
 export const visaApi = {
   // Check application status
   checkApplicationStatus: async (
     data: ApplicationStatusRequest
   ): Promise<ApplicationStatusResponse> => {
-    const response = await apiClient.post("/check-status", data);
+    const response = await apiClient.post('/check-status', data);
     return response.data;
   },
 
+  // Get visa application by ID - includes all sections
+  getVisaApplication: async (applicationId: string) => {
+    try {
+      const response = await apiClient.get(`/${applicationId}`);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { message: string; response?: { status: number } };
+      console.error('Error fetching visa application:', err.message);
+      if (err.response?.status === 404) {
+        return null; // Return null for not found
+      }
+      throw error; // Re-throw other errors
+    }
+  },
+
   getVisaTypes: async () => {
-    const response = await apiClient.get("/visa-types/prices");
+    const response = await apiClient.get('/visa-types/prices');
+    return response.data;
+  },
+
+  // Visa details methods
+  createVisaDetails: async (
+    data: VisaDetailsRequest
+  ): Promise<VisaDetailsResponse> => {
+    const response = await apiClient.post('/visa-details', data);
+    return response.data;
+  },
+
+  getVisaDetails: async (formId: string) => {
+    try {
+      const response = await apiClient.get(`/visa-details/${formId}`);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { message: string; response?: { status: number } };
+      console.error('Error fetching visa details:', err.message);
+      if (err.response?.status === 404) {
+        return null; // Return null for not found, so we can handle it gracefully
+      }
+      throw error; // Re-throw other errors
+    }
+  },
+
+  updateVisaDetails: async (
+    formId: string,
+    data: Partial<VisaDetailsRequest>
+  ) => {
+    const response = await apiClient.put(`/visa-details/${formId}`, data);
+    return response.data;
+  },
+
+  // Arrival info methods
+  createArrivalInfo: async (data: ArrivalInfoRequest) => {
+    console.log('API - createArrivalInfo called with data:', data);
+    if (!data.formId) {
+      console.error('No formId provided in ArrivalInfoRequest');
+      throw new Error('Form ID is required for creating arrival information');
+    }
+
+    try {
+      const response = await apiClient.post('/arrival-info', data);
+      console.log('API - createArrivalInfo response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - createArrivalInfo error:', error);
+      throw error;
+    }
+  },
+
+  getArrivalInfo: async (formId: string) => {
+    try {
+      const response = await apiClient.get(`/arrival-info/${formId}`);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { message: string; response?: { status: number } };
+      console.error('Error fetching arrival info:', err.message);
+      if (err.response?.status === 404) {
+        return null; // Return null for not found, so we can handle it gracefully
+      }
+      throw error; // Re-throw other errors
+    }
+  },
+
+  updateArrivalInfo: async (
+    formId: string,
+    data: Partial<ArrivalInfoRequest>
+  ) => {
+    const response = await apiClient.put(`/arrival-info/${formId}`, data);
+    return response.data;
+  },
+
+  // Personal info methods
+  createPersonalInfo: async (
+    formId: string,
+    data: Partial<PersonalInfoData>
+  ) => {
+    console.log('API - createPersonalInfo called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to createPersonalInfo');
+      throw new Error('Form ID is required for creating personal information');
+    }
+
+    try {
+      const response = await apiClient.post('/personal-info', {
+        ...data,
+        formId: formId,
+      });
+      console.log('API - createPersonalInfo response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - createPersonalInfo error:', error);
+      throw error;
+    }
+  },
+
+  getPersonalInfo: async (formId: string) => {
+    console.log('API - getPersonalInfo called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to getPersonalInfo');
+      return null;
+    }
+
+    try {
+      const response = await apiClient.get(`/personal-info/${formId}`);
+      console.log('API - getPersonalInfo response:', response.data);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { message: string; response?: { status: number } };
+      console.error('Error fetching personal info:', err.message);
+      if (err.response?.status === 404) {
+        return null; // Return null for not found
+      }
+      throw error; // Re-throw other errors
+    }
+  },
+
+  updatePersonalInfo: async (
+    formId: string,
+    data: Partial<PersonalInfoData>
+  ) => {
+    console.log('API - updatePersonalInfo called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to updatePersonalInfo');
+      throw new Error('Form ID is required for updating personal information');
+    }
+
+    try {
+      const response = await apiClient.put(`/personal-info/${formId}`, data);
+      console.log('API - updatePersonalInfo response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - updatePersonalInfo error:', error);
+      throw error;
+    }
+  },
+
+  // Passport info methods
+  createPassportInfo: async (
+    formId: string,
+    data: Partial<PassportInfoData>
+  ) => {
+    const response = await apiClient.post('/passport-info', {
+      ...data,
+      applicationId: formId,
+    });
+    return response.data;
+  },
+
+  getPassportInfo: async (formId: string) => {
+    try {
+      const response = await apiClient.get(`/passport-info/${formId}`);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { message: string; response?: { status: number } };
+      console.error('Error fetching passport info:', err.message);
+      if (err.response?.status === 404) {
+        return null; // Return null for not found
+      }
+      throw error; // Re-throw other errors
+    }
+  },
+
+  updatePassportInfo: async (
+    formId: string,
+    data: Partial<PassportInfoData>
+  ) => {
+    const response = await apiClient.put(`/passport-info/${formId}`, data);
     return response.data;
   },
 };
