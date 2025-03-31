@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   ChevronDown,
@@ -18,7 +18,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -59,11 +58,11 @@ export default function ReviewForm() {
   const [expandedSections, setExpandedSections] = useState<
     Record<SectionKey, boolean>
   >({
-    visaDetails: true,
-    arrivalInfo: true,
-    personalInfo: true,
-    passportInfo: true,
-    additionalApplicants: true,
+    visaDetails: false,
+    arrivalInfo: false,
+    personalInfo: false,
+    passportInfo: false,
+    additionalApplicants: false,
   });
 
   // Fetch the application data
@@ -80,14 +79,6 @@ export default function ReviewForm() {
       }
     },
     enabled: !!formId,
-  });
-
-  // Mutation for submitting the application
-  const submitMutation = useMutation({
-    mutationFn: async () => {
-      if (!formId) throw new Error('No application ID found');
-      return await visaApi.submitApplication(formId);
-    },
   });
 
   // Toggle section expansion
@@ -168,11 +159,6 @@ export default function ReviewForm() {
 
   const { emailAddress, visaDetails, arrivalInfo, personalInfo, passportInfo } =
     applicationData;
-
-  // Check if a specific step is completed
-  const isStepCompleted = (step: FormStep): boolean => {
-    return !!isCompleted[step];
-  };
 
   return (
     <div className="space-y-6">
@@ -578,328 +564,114 @@ export default function ReviewForm() {
       </Card>
 
       {/* Additional Applicants Section */}
-      {applicationData.additionalApplicants && (
+      {applicationData?.additionalApplicants && (
         <Card>
           <CardHeader
-            className="pb-3 cursor-pointer"
+            className="flex flex-row items-center justify-between cursor-pointer"
             onClick={() => toggleSection('additionalApplicants')}
           >
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <CardTitle>Additional Applicants</CardTitle>
-                <Badge className="ml-auto flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-100">
-                  <CheckCircle className="h-3 w-3" />
-                  {Array.isArray(applicationData.additionalApplicants)
-                    ? applicationData.additionalApplicants.length
-                    : 0}{' '}
-                  Applicant
-                  {Array.isArray(applicationData.additionalApplicants) &&
-                  applicationData.additionalApplicants.length !== 1
-                    ? 's'
-                    : ''}
-                </Badge>
-              </div>
-              <Button variant="ghost" size="icon">
-                {expandedSections.additionalApplicants ? (
-                  <ChevronUp />
-                ) : (
-                  <ChevronDown />
-                )}
-              </Button>
+            <div className="space-y-1">
+              <CardTitle>Additional Applicants</CardTitle>
             </div>
+            <Button variant="ghost" size="icon">
+              {expandedSections.additionalApplicants ? (
+                <ChevronUp />
+              ) : (
+                <ChevronDown />
+              )}
+            </Button>
           </CardHeader>
-          {expandedSections.additionalApplicants &&
-            applicationData.additionalApplicants &&
-            Array.isArray(applicationData.additionalApplicants) &&
-            applicationData.additionalApplicants.length > 0 && (
-              <>
-                <CardContent className="pb-3">
-                  {Array.isArray(applicationData.additionalApplicants) &&
-                  applicationData.additionalApplicants.length > 0 ? (
-                    applicationData.additionalApplicants.map(
-                      (
-                        applicant: Record<string, Record<string, unknown>>,
-                        index: number
-                      ) => (
-                        <div
-                          key={index}
-                          className="mb-6 border-b pb-6 last:border-b-0 last:pb-0"
-                        >
-                          <h4 className="text-lg font-semibold mb-3">
+
+          {expandedSections.additionalApplicants && (
+            <>
+              <CardContent>
+                {Array.isArray(applicationData.additionalApplicants) &&
+                applicationData.additionalApplicants.length > 0 ? (
+                  <div className="space-y-4">
+                    {applicationData.additionalApplicants.map(
+                      (applicant, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <h3 className="font-medium mb-2">
                             Applicant {index + 1}:{' '}
-                            {safeDisplay(applicant.personalInfo.givenName)}{' '}
-                            {safeDisplay(applicant.personalInfo.surname)}
-                          </h4>
-                          <div className="space-y-4">
-                            <div>
-                              <h5 className="text-sm font-medium text-gray-700 mb-2">
-                                Personal Information
-                              </h5>
-                              <dl className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4">
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Date of Birth
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {formatDate(
-                                      safeDisplay(
-                                        applicant.personalInfo.dateOfBirth
-                                      )
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Gender
-                                  </dt>
-                                  <dd className="mt-1 text-sm capitalize">
-                                    {safeDisplay(applicant.personalInfo.gender)}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Citizenship
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.personalInfo.citizenship
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Country of Birth
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.personalInfo.countryOfBirth
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Place of Birth
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.personalInfo.placeOfBirth
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Email
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(applicant.personalInfo.email)}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Phone Number
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.personalInfo.phoneNumber
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Occupation
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.personalInfo.occupation
-                                    )}
-                                  </dd>
-                                </div>
-                                <div className="sm:col-span-2">
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Address
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.personalInfo.streetAddress
-                                    )}
-                                    ,
-                                    {safeDisplay(
-                                      applicant.personalInfo.addressCity
-                                    )}
-                                    ,
-                                    {safeDisplay(
-                                      applicant.personalInfo.addressCountry
-                                    )}
-                                  </dd>
-                                </div>
-                              </dl>
+                            {safeDisplay(applicant.personalInfo?.givenName)}{' '}
+                            {safeDisplay(applicant.personalInfo?.surname)}
+                          </h3>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="text-muted-foreground">
+                              Date of Birth:
                             </div>
                             <div>
-                              <h5 className="text-sm font-medium text-gray-700 mb-2">
-                                Passport Information
-                              </h5>
-                              <dl className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4">
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Passport Type
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.passportInfo.passportType
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Passport Number
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.passportInfo.passportNumber
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Issue Date
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {formatDate(
-                                      safeDisplay(
-                                        applicant.passportInfo.passportIssueDate
-                                      )
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Expiry Date
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {formatDate(
-                                      safeDisplay(
-                                        applicant.passportInfo
-                                          .passportExpiryDate
-                                      )
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Issuing Country
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.passportInfo
-                                        .passportIssuingCountry
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt className="text-sm font-medium text-gray-500">
-                                    Issuing Authority
-                                  </dt>
-                                  <dd className="mt-1 text-sm">
-                                    {safeDisplay(
-                                      applicant.passportInfo
-                                        .passportIssuingAuthority
-                                    )}
-                                  </dd>
-                                </div>
-                              </dl>
+                              {formatDate(
+                                safeDisplay(applicant.personalInfo?.dateOfBirth)
+                              )}
+                            </div>
+                            <div className="text-muted-foreground">Gender:</div>
+                            <div className="capitalize">
+                              {safeDisplay(applicant.personalInfo?.gender)}
+                            </div>
+                            <div className="text-muted-foreground">
+                              Citizenship:
+                            </div>
+                            <div>
+                              {safeDisplay(applicant.personalInfo?.citizenship)}
+                            </div>
+                            <div className="text-muted-foreground">
+                              Passport Number:
+                            </div>
+                            <div>
+                              {safeDisplay(
+                                applicant.passportInfo?.passportNumber
+                              )}
+                            </div>
+                            <div className="text-muted-foreground">
+                              Passport Expiry:
+                            </div>
+                            <div>
+                              {formatDate(
+                                safeDisplay(
+                                  applicant.passportInfo?.passportExpiryDate
+                                )
+                              )}
                             </div>
                           </div>
                         </div>
                       )
-                    )
-                  ) : (
-                    <div className="text-muted-foreground text-center py-4">
-                      No additional applicants added for this application.
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit('additional-applicants')}
-                  >
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    {Array.isArray(applicationData.additionalApplicants) &&
-                    applicationData.additionalApplicants.length > 0
-                      ? 'Edit Additional Applicants'
-                      : 'Add Additional Applicants'}
-                  </Button>
-                </CardFooter>
-              </>
-            )}
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground text-center py-4">
+                    No additional applicants added for this application.
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="border-t p-4 flex justify-end gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => handleEdit('additional-applicants')}
+                  className="flex items-center gap-2"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  {Array.isArray(applicationData.additionalApplicants) &&
+                  applicationData.additionalApplicants.length > 0
+                    ? 'Edit Additional Applicants'
+                    : 'Add Additional Applicants'}
+                </Button>
+              </CardFooter>
+            </>
+          )}
         </Card>
       )}
 
-      {/* Declaration and Submission Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Declaration</CardTitle>
-          <CardDescription>
-            Please read the following declaration before submitting your
-            application
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4 text-sm">
-            <p>
-              I hereby declare that the information provided in this application
-              is true, complete and accurate to the best of my knowledge.
-            </p>
-            <p>
-              I understand that providing false or misleading information may
-              result in my application being rejected or my visa being
-              cancelled.
-            </p>
-            <p>
-              I understand that submission of this application does not
-              guarantee approval and additional documentation may be requested.
-            </p>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col items-start gap-4">
-          <Alert className="w-full">
-            <CheckCircle className="h-4 w-4" />
-            <AlertTitle>Ready to submit?</AlertTitle>
-            <AlertDescription>
-              Please ensure all sections are complete and accurate before
-              submitting your application.
-            </AlertDescription>
-          </Alert>
-
-          <div className="flex justify-between w-full">
-            <Button
-              variant="outline"
-              onClick={() => handleEdit('additional-applicants')}
-            >
-              Previous
-            </Button>
-
-            <Button
-              onClick={() => submitMutation.mutate()}
-              disabled={
-                submitMutation.isPending ||
-                !isStepCompleted('passport-info') ||
-                !isStepCompleted('attachments')
-              }
-            >
-              {submitMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                'Submit Application'
-              )}
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+      {/* Navigation Buttons */}
+      <div className="flex justify-between pt-6">
+        <Button
+          variant="outline"
+          onClick={() => handleEdit('additional-applicants')}
+        >
+          Previous
+        </Button>
+        <Button onClick={() => setCurrentStep('attachments')}>Next</Button>
+      </div>
     </div>
   );
 }

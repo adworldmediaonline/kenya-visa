@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Upload, CheckCircle } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFormContext } from '@/providers/FormProvider';
 import {
@@ -11,7 +11,6 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function AttachmentsForm() {
   const { updateFormData, markStepCompleted, setCurrentStep } =
@@ -123,14 +122,6 @@ export default function AttachmentsForm() {
             </div>
           </CardContent>
         </Card>
-
-        <Alert className="bg-amber-50 border-amber-200">
-          <CheckCircle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            For demonstration purposes, you can proceed without actual file
-            uploads.
-          </AlertDescription>
-        </Alert>
 
         <div className="flex justify-between pt-6">
           <Button
