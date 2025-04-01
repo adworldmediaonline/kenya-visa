@@ -330,4 +330,66 @@ export const visaApi = {
     );
     return response.data;
   },
+
+  // Document management methods
+  uploadDocument: async (formData: FormData) => {
+    try {
+      const response = await apiClient.post('/documents/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      throw error;
+    }
+  },
+
+  getDocuments: async (
+    applicationId: string,
+    applicantType: 'primary' | 'additional' = 'primary',
+    additionalApplicantIndex?: number
+  ) => {
+    try {
+      let url = `/documents/${applicationId}/${applicantType}`;
+      if (
+        applicantType === 'additional' &&
+        additionalApplicantIndex !== undefined
+      ) {
+        url += `/${additionalApplicantIndex}`;
+      }
+      const response = await apiClient.get(url);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { message: string; response?: { status: number } };
+      console.error('Error fetching documents:', err.message);
+      if (err.response?.status === 404) {
+        return null; // Return null for not found
+      }
+      throw error;
+    }
+  },
+
+  deleteDocument: async (
+    applicationId: string,
+    documentType: string,
+    applicantType: 'primary' | 'additional' = 'primary',
+    additionalApplicantIndex?: number
+  ) => {
+    try {
+      let url = `/documents/${applicationId}/${documentType}/${applicantType}`;
+      if (
+        applicantType === 'additional' &&
+        additionalApplicantIndex !== undefined
+      ) {
+        url += `/${additionalApplicantIndex}`;
+      }
+      const response = await apiClient.delete(url);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      throw error;
+    }
+  },
 };
