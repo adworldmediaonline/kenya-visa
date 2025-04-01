@@ -60,11 +60,12 @@ export interface PersonalInfoData {
 
 // Passport info interfaces
 export interface PassportInfoData {
+  passportType: string;
   passportNumber: string;
-  issueDate: string | Date;
-  expiryDate: string | Date;
-  issuingCountry: string;
-  birthplace: string;
+  passportIssueDate: string | Date;
+  passportExpiryDate: string | Date;
+  passportIssuingCountry: string;
+  passportIssuingAuthority: string;
 }
 
 export const visaApi = {
@@ -236,11 +237,23 @@ export const visaApi = {
     formId: string,
     data: Partial<PassportInfoData>
   ) => {
-    const response = await apiClient.post('/passport-info', {
-      ...data,
-      applicationId: formId,
-    });
-    return response.data;
+    console.log('API - createPassportInfo called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to createPassportInfo');
+      throw new Error('Form ID is required for creating passport information');
+    }
+
+    try {
+      const response = await apiClient.post('/passport-info', {
+        ...data,
+        formId: formId,
+      });
+      console.log('API - createPassportInfo response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - createPassportInfo error:', error);
+      throw error;
+    }
   },
 
   getPassportInfo: async (formId: string) => {
@@ -262,6 +275,59 @@ export const visaApi = {
     data: Partial<PassportInfoData>
   ) => {
     const response = await apiClient.put(`/passport-info/${formId}`, data);
+    return response.data;
+  },
+
+  // Submit the full application
+  submitApplication: async (formId: string) => {
+    console.log('API - submitApplication called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to submitApplication');
+      throw new Error('Form ID is required for submitting application');
+    }
+
+    try {
+      const response = await apiClient.post(`/submit/${formId}`);
+      console.log('API - submitApplication response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - submitApplication error:', error);
+      throw error;
+    }
+  },
+
+  getAdditionalApplicants: async (formId: string) => {
+    const response = await apiClient.get(`/additional-applicants/${formId}`);
+    return response.data;
+  },
+
+  addAdditionalApplicant: async (
+    formId: string,
+    data: Record<string, unknown>
+  ) => {
+    const response = await apiClient.post(
+      `/additional-applicants/${formId}`,
+      data
+    );
+    return response.data;
+  },
+
+  updateAdditionalApplicant: async (
+    formId: string,
+    applicantIndex: number,
+    data: Record<string, unknown>
+  ) => {
+    const response = await apiClient.put(
+      `/additional-applicants/${formId}/${applicantIndex}`,
+      data
+    );
+    return response.data;
+  },
+
+  removeAdditionalApplicant: async (formId: string, applicantIndex: number) => {
+    const response = await apiClient.delete(
+      `/additional-applicants/${formId}/${applicantIndex}`
+    );
     return response.data;
   },
 };

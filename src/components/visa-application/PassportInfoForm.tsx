@@ -17,6 +17,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -28,45 +35,74 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
 
+// Define passport type options
+const passportTypes = [
+  'Regular/Ordinary',
+  'Diplomatic',
+  'Service/Official',
+  'Emergency',
+  'Other',
+];
+
 // Define the form schema with Zod
 const passportInfoSchema = z.object({
+  passportType: z.string().min(1, 'Passport type is required'),
   passportNumber: z.string().min(1, 'Passport number is required'),
-  issueDate: z.date({
+  passportIssueDate: z.date({
     required_error: 'Issue date is required',
   }),
-  expiryDate: z
+  passportExpiryDate: z
     .date({
       required_error: 'Expiry date is required',
     })
     .refine(date => date > new Date(), {
-      message: 'Expiry date must be in the future',
+      message: 'Passport must not be expired',
     }),
-  issuingCountry: z.string().min(1, 'Issuing country is required'),
-  birthplace: z.string().min(1, 'Birthplace is required'),
+  passportIssuingCountry: z.string().min(1, 'Issuing country is required'),
+  passportIssuingAuthority: z.string().min(1, 'Issuing authority is required'),
 });
 
 type PassportInfoFormValues = z.infer<typeof passportInfoSchema>;
 
 export default function PassportInfoForm() {
+  console.log('PassportInfoForm rendering started');
+
   const {
     formId,
+    emailAddress,
     updateFormData,
     markStepCompleted,
     setCurrentStep,
     completedSteps,
   } = useFormContext();
 
+  console.log('FormContext values:', { formId, emailAddress, completedSteps });
+
+  // Check for missing formId and redirect if needed
+  useEffect(() => {
+    if (!formId) {
+      console.error(
+        'FormId is missing in PassportInfoForm, redirecting to first step'
+      );
+      // If no formId, go back to the first step
+      setCurrentStep('visa-details');
+    }
+  }, [formId, setCurrentStep]);
+
   // Initialize the form
   const form = useForm<PassportInfoFormValues>({
     resolver: zodResolver(passportInfoSchema),
     defaultValues: {
+      passportType: '',
       passportNumber: '',
-      issueDate: undefined,
-      expiryDate: undefined,
-      issuingCountry: '',
-      birthplace: '',
+      passportIssueDate: undefined,
+      passportExpiryDate: undefined,
+      passportIssuingCountry: '',
+      passportIssuingAuthority: '',
     },
   });
+
+  console.log('Form initialized');
 
   // Determine if this is an update operation
   const isUpdate = !!formId && completedSteps.includes('passport-info');
@@ -97,15 +133,16 @@ export default function PassportInfoForm() {
       // Use setTimeout to ensure the reset happens after the form is fully initialized
       setTimeout(() => {
         form.reset({
+          passportType: passportInfo.passportType || '',
           passportNumber: passportInfo.passportNumber || '',
-          issueDate: passportInfo.issueDate
-            ? new Date(passportInfo.issueDate)
+          passportIssueDate: passportInfo.passportIssueDate
+            ? new Date(passportInfo.passportIssueDate)
             : undefined,
-          expiryDate: passportInfo.expiryDate
-            ? new Date(passportInfo.expiryDate)
+          passportExpiryDate: passportInfo.passportExpiryDate
+            ? new Date(passportInfo.passportExpiryDate)
             : undefined,
-          issuingCountry: passportInfo.issuingCountry || '',
-          birthplace: passportInfo.birthplace || '',
+          passportIssuingCountry: passportInfo.passportIssuingCountry || '',
+          passportIssuingAuthority: passportInfo.passportIssuingAuthority || '',
         });
       }, 0);
     }
@@ -118,11 +155,13 @@ export default function PassportInfoForm() {
         throw new Error('Form ID is required');
       }
 
+      console.log('PassportInfoForm - Submitting with formId:', formId);
+
       // Convert dates to ISO strings for the API
       const formattedValues = {
         ...values,
-        issueDate: values.issueDate.toISOString(),
-        expiryDate: values.expiryDate.toISOString(),
+        passportIssueDate: values.passportIssueDate.toISOString(),
+        passportExpiryDate: values.passportExpiryDate.toISOString(),
       };
 
       if (isUpdate) {
@@ -133,13 +172,24 @@ export default function PassportInfoForm() {
         return await visaApi.createPassportInfo(formId, formattedValues);
       }
     },
-    onSuccess: () => {
+    onSuccess: response => {
+      console.log(
+        'PassportInfoForm - Submission successful, response:',
+        response
+      );
+
       // Update form data in context
       updateFormData('passport-info', form.getValues());
       // Mark step as completed
       markStepCompleted('passport-info');
       // Move to next step
-      setCurrentStep('review');
+      setCurrentStep('additional-applicants');
+    },
+    onError: error => {
+      console.error('PassportInfoForm - Submission error:', error);
+      alert(
+        'An error occurred while saving your passport information. Please try again.'
+      );
     },
   });
 
@@ -174,6 +224,32 @@ export default function PassportInfoForm() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Passport Type */}
+          <FormField
+            control={form.control}
+            name="passportType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passport Type</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select passport type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {passportTypes.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Passport Number */}
           <FormField
             control={form.control}
@@ -189,28 +265,10 @@ export default function PassportInfoForm() {
             )}
           />
 
-          {/* Issuing Country */}
+          {/* Passport Issue Date */}
           <FormField
             control={form.control}
-            name="issuingCountry"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Issuing Country</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Country that issued passport"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Issue Date */}
-          <FormField
-            control={form.control}
-            name="issueDate"
+            name="passportIssueDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Issue Date</FormLabel>
@@ -248,10 +306,10 @@ export default function PassportInfoForm() {
             )}
           />
 
-          {/* Expiry Date */}
+          {/* Passport Expiry Date */}
           <FormField
             control={form.control}
-            name="expiryDate"
+            name="passportExpiryDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Expiry Date</FormLabel>
@@ -289,16 +347,34 @@ export default function PassportInfoForm() {
             )}
           />
 
-          {/* Birthplace */}
+          {/* Passport Issuing Country */}
           <FormField
             control={form.control}
-            name="birthplace"
+            name="passportIssuingCountry"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Birthplace</FormLabel>
+                <FormLabel>Issuing Country</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Place of birth as shown in passport"
+                    placeholder="Country that issued passport"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Passport Issuing Authority */}
+          <FormField
+            control={form.control}
+            name="passportIssuingAuthority"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Issuing Authority</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Authority that issued passport (e.g., Ministry of Foreign Affairs)"
                     {...field}
                   />
                 </FormControl>

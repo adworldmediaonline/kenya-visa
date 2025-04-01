@@ -6,6 +6,9 @@ import VisaDetailsForm from './VisaDetailsForm';
 import ArrivalInfoForm from './ArrivalInfoForm';
 import PersonalInfoForm from './PersonalInfoForm';
 import PassportInfoForm from './PassportInfoForm';
+import AdditionalApplicantsForm from './AdditionalApplicantsForm';
+import ReviewForm from './ReviewForm';
+import AttachmentsForm from './AttachmentsForm';
 
 interface MultiStepFormProps {
   title: string;
@@ -23,6 +26,7 @@ export default function MultiStepForm({
     { id: 'arrival-info', label: 'Arrival Information' },
     { id: 'personal-info', label: 'Personal Information' },
     { id: 'passport-info', label: 'Passport Information' },
+    { id: 'additional-applicants', label: 'Additional Applicants' },
     { id: 'review', label: 'Review' },
     { id: 'attachments', label: 'Attachments' },
   ];
@@ -78,6 +82,11 @@ export default function MultiStepForm({
           {currentStep === 'arrival-info' && <ArrivalInfoForm />}
           {currentStep === 'personal-info' && <PersonalInfoForm />}
           {currentStep === 'passport-info' && <PassportInfoForm />}
+          {currentStep === 'additional-applicants' && (
+            <AdditionalApplicantsForm />
+          )}
+          {currentStep === 'review' && <ReviewForm />}
+          {currentStep === 'attachments' && <AttachmentsForm />}
         </Card>
       </div>
     </div>

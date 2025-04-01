@@ -34,6 +34,8 @@ function VisaApplicationContent() {
     description = 'Enter your personal information.';
   } else if (currentStep === 'passport-info') {
     description = 'Enter your passport details.';
+  } else if (currentStep === 'additional-applicants') {
+    description = 'Add or manage additional applicants traveling with you.';
   } else if (currentStep === 'review') {
     description = 'Review your application before submission.';
   } else if (currentStep === 'attachments') {
