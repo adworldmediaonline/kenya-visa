@@ -283,7 +283,7 @@ export default function PaymentForm() {
     }
 
     // Get visa details for display
-    const visaDetails = applicationData.visaDetails || {};
+    const visaDetails = applicationData.visaDetails || { visaType: '', visaValidity: '' };
     const additionalApplicants = applicationData.additionalApplicants || [];
     const totalApplicants =
         1 + (Array.isArray(additionalApplicants) ? additionalApplicants.length : 0);
