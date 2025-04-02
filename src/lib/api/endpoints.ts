@@ -68,6 +68,25 @@ export interface PassportInfoData {
   passportIssuingAuthority: string;
 }
 
+export interface CreatePaymentOrderRequest {
+  formId: string;
+}
+
+export interface CreatePaymentOrderResponse {
+  orderId: string;
+  amount: number;
+  currency: string;
+  receipt: string;
+  key: string;
+}
+
+export interface VerifyPaymentRequest {
+  formId: string;
+  paymentId: string;
+  orderId: string;
+  signature: string;
+}
+
 export const visaApi = {
   // Check application status
   checkApplicationStatus: async (
@@ -389,6 +408,30 @@ export const visaApi = {
       return response.data;
     } catch (error) {
       console.error('Error deleting document:', error);
+      throw error;
+    }
+  },
+
+  createPaymentOrder: async (data: CreatePaymentOrderRequest): Promise<CreatePaymentOrderResponse> => {
+    try {
+      const response = await apiClient.post('/payments/create-order', data);
+      console.log("Create Payement Order Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.log("Create Payement Order Error:", error);
+      console.error('Error creating payment order:', error);
+      throw error;
+    }
+  },
+
+  verifyPayment: async (data: VerifyPaymentRequest) => {
+    try {
+      const response = await apiClient.post('/payments/verify-payment', data);
+      console.log("Verify Payment Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.log("Verify Payment Error:", error);
+      console.error('Error verifying payment:', error);
       throw error;
     }
   },

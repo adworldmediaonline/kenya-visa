@@ -171,7 +171,7 @@ export default function VisaDetailsForm() {
       }
     });
     return () => subscription.unsubscribe();
-  }, [form.watch, setEmailAddress]);
+  }, [form.watch, setEmailAddress, form]);
 
   // Handle form submission
   function onSubmit(values: VisaDetailsFormValues) {
@@ -306,8 +306,8 @@ export default function VisaDetailsForm() {
             {mutation.isPending
               ? 'Submitting...'
               : isUpdate
-              ? 'Update & Continue'
-              : 'Next'}
+                ? 'Update & Continue'
+                : 'Next'}
           </Button>
         </div>
       </form>

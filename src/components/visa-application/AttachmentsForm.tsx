@@ -91,9 +91,8 @@ export default function AttachmentsForm() {
             type: 'additional',
             index,
             name:
-              `${applicant.givenName || ''} ${
-                applicant.surname || ''
-              }`.trim() || `Additional Applicant ${index + 1}`,
+              `${applicant.givenName || ''} ${applicant.surname || ''
+                }`.trim() || `Additional Applicant ${index + 1}`,
           });
         }
       );
@@ -232,7 +231,7 @@ export default function AttachmentsForm() {
       );
       setUploadsComplete(allUploaded);
     }
-  }, [existingDocuments, requiredDocuments]);
+  }, [existingDocuments, requiredDocuments, documentStatus]);
 
   // Handle file upload
   const handleFileUpload = useCallback(
@@ -384,7 +383,7 @@ export default function AttachmentsForm() {
         setUploadsComplete(allUploaded);
       }
     }
-  }, [documentStatus, requiredDocuments]);
+  }, [documentStatus, requiredDocuments, uploadsComplete]);
 
   if (isLoadingApplication) {
     return (
