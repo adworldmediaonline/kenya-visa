@@ -103,6 +103,7 @@ export default function AttachmentsForm() {
       const updatedStatus = { ...documentStatus };
 
       // Map document names to the keys in the documents object
+      console.log('existing documents', existingDocuments.data.documents);
       Object.entries(existingDocuments.data.documents).forEach(
         ([key, value]) => {
           // Find the matching required document by normalizing the key
@@ -182,10 +183,8 @@ export default function AttachmentsForm() {
           })
           .join('');
 
-        // The backend stores documents using camelCase keys
         let secureUrl = '';
 
-        // Try different ways to find the uploaded document URL
         if (response.data?.fileInfo?.secure_url) {
           secureUrl = response.data.fileInfo.secure_url;
           console.log('Found secure_url in fileInfo:', secureUrl);
