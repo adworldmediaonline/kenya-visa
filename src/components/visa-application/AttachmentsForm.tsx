@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Loader2, Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFormContext } from '@/providers/FormProvider';
 import {
@@ -33,6 +33,14 @@ interface DocumentStatus {
   url: string | null;
 }
 
+// Define applicant type
+interface Applicant {
+  id: string;
+  type: 'primary' | 'additional';
+  index?: number;
+  name: string;
+}
+
 export default function AttachmentsForm() {
   const { formId, setCurrentStep, updateFormData, markStepCompleted } =
     useFormContext();
@@ -41,8 +49,16 @@ export default function AttachmentsForm() {
     Record<string, DocumentStatus>
   >({});
   const [uploadsComplete, setUploadsComplete] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant>({
+    id: 'primary',
+    type: 'primary',
+    name: 'Primary Applicant',
+  });
+  const [applicants, setApplicants] = useState<Applicant[]>([
+    { id: 'primary', type: 'primary', name: 'Primary Applicant' },
+  ]);
 
-  // Fetch application data to get visa type
+  // Fetch application data to get visa type and additional applicants
   const { data: applicationData, isLoading: isLoadingApplication } = useQuery({
     queryKey: ['visa-application', formId],
     queryFn: async () => {
@@ -52,18 +68,84 @@ export default function AttachmentsForm() {
     enabled: !!formId,
   });
 
+  // Setup applicants list when application data is loaded
+  useEffect(() => {
+    if (!applicationData) return;
+
+    const newApplicants: Applicant[] = [
+      { id: 'primary', type: 'primary', name: 'Primary Applicant' },
+    ];
+
+    // Add additional applicants if they exist
+    if (applicationData.additionalApplicants?.length > 0) {
+      applicationData.additionalApplicants.forEach(
+        (
+          applicant: {
+            givenName?: string;
+            surname?: string;
+          },
+          index: number
+        ) => {
+          newApplicants.push({
+            id: `additional-${index}`,
+            type: 'additional',
+            index,
+            name:
+              `${applicant.givenName || ''} ${
+                applicant.surname || ''
+              }`.trim() || `Additional Applicant ${index + 1}`,
+          });
+        }
+      );
+    }
+
+    setApplicants(newApplicants);
+  }, [applicationData]);
+
   // Fetch visa types and prices to get required documents
   const { data: visaTypesData } = useQuery({
     queryKey: ['visa-types'],
     queryFn: () => visaApi.getVisaTypes(),
   });
 
-  // Fetch existing documents if any
+  // Fetch existing documents for selected applicant
   const { data: existingDocuments, refetch: refetchDocuments } = useQuery({
-    queryKey: ['documents', formId],
+    queryKey: [
+      'documents',
+      formId,
+      selectedApplicant.type,
+      selectedApplicant.index,
+    ],
     queryFn: async () => {
       if (!formId) return null;
-      return await visaApi.getDocuments(formId);
+      try {
+        // For additional applicants, include index parameter
+        if (
+          selectedApplicant.type === 'additional' &&
+          selectedApplicant.index !== undefined
+        ) {
+          return await visaApi.getDocuments(
+            formId,
+            selectedApplicant.type,
+            selectedApplicant.index
+          );
+        }
+        // For primary applicant
+        return await visaApi.getDocuments(formId);
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        if (
+          err.response?.data?.message ===
+          'No documents found for this application'
+        ) {
+          return {
+            success: false,
+            message: 'No documents found for this application',
+            data: { documents: {} },
+          };
+        }
+        throw error;
+      }
     },
     enabled: !!formId,
   });
@@ -99,10 +181,22 @@ export default function AttachmentsForm() {
 
   // Update document status based on existing documents
   useEffect(() => {
+    if (!existingDocuments) return;
+
+    // Handle case when no documents are found (success: false)
+    if (
+      existingDocuments.success === false ||
+      (existingDocuments.data && existingDocuments.data.success === false)
+    ) {
+      console.log('No existing documents found or error occurred');
+      return;
+    }
+
     if (existingDocuments?.data?.documents && requiredDocuments.length > 0) {
       const updatedStatus = { ...documentStatus };
 
       // Map document names to the keys in the documents object
+      console.log('existing documents', existingDocuments.data.documents);
       Object.entries(existingDocuments.data.documents).forEach(
         ([key, value]) => {
           // Find the matching required document by normalizing the key
@@ -166,7 +260,18 @@ export default function AttachmentsForm() {
         formData.append('applicationId', formId);
         formData.append('documentType', documentType);
         formData.append('visaType', applicationData.visaDetails.visaType);
-        formData.append('applicantType', 'primary');
+
+        // Add applicant type and index if applicable
+        formData.append('applicantType', selectedApplicant.type);
+        if (
+          selectedApplicant.type === 'additional' &&
+          selectedApplicant.index !== undefined
+        ) {
+          formData.append(
+            'additionalApplicantIndex',
+            selectedApplicant.index.toString()
+          );
+        }
 
         // Upload file
         const response = await visaApi.uploadDocument(formData);
@@ -182,10 +287,8 @@ export default function AttachmentsForm() {
           })
           .join('');
 
-        // The backend stores documents using camelCase keys
         let secureUrl = '';
 
-        // Try different ways to find the uploaded document URL
         if (response.data?.fileInfo?.secure_url) {
           secureUrl = response.data.fileInfo.secure_url;
           console.log('Found secure_url in fileInfo:', secureUrl);
@@ -246,47 +349,7 @@ export default function AttachmentsForm() {
         toast.error(errorMessage);
       }
     },
-    [formId, applicationData, refetchDocuments]
-  );
-
-  // Handle document deletion
-  const handleDeleteDocument = useCallback(
-    async (documentType: string) => {
-      if (!formId || !applicationData?.visaDetails?.visaType) {
-        toast.error('Missing application data required for deletion');
-        return;
-      }
-
-      try {
-        await visaApi.deleteDocument(formId, documentType);
-
-        // Update document status
-        setDocumentStatus(prev => ({
-          ...prev,
-          [documentType]: {
-            isUploaded: false,
-            isUploading: false,
-            error: null,
-            progress: 0,
-            url: null,
-          },
-        }));
-
-        // Refetch documents to update the list
-        refetchDocuments();
-
-        toast.success(`${documentType} deleted successfully`);
-      } catch (error) {
-        console.error(`Error deleting ${documentType}:`, error);
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : `Failed to delete ${documentType}`;
-
-        toast.error(errorMessage);
-      }
-    },
-    [formId, applicationData, refetchDocuments]
+    [formId, applicationData, refetchDocuments, selectedApplicant]
   );
 
   // Handle form submission
@@ -300,6 +363,14 @@ export default function AttachmentsForm() {
       toast.error('Please upload all required documents before continuing');
     }
   }, [uploadsComplete, updateFormData, markStepCompleted, setCurrentStep]);
+
+  // Handle applicant change
+  const handleApplicantChange = (applicant: Applicant) => {
+    // Reset document status when changing applicants
+    setDocumentStatus({});
+    setUploadsComplete(false);
+    setSelectedApplicant(applicant);
+  };
 
   // Check if all required documents are uploaded when document status changes
   useEffect(() => {
@@ -347,6 +418,27 @@ export default function AttachmentsForm() {
         </p>
       </div>
 
+      {/* Applicant selector */}
+      {applicants.length > 1 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-2">Select Applicant</h3>
+          <div className="flex flex-wrap gap-2">
+            {applicants.map(applicant => (
+              <Button
+                key={applicant.id}
+                variant={
+                  selectedApplicant.id === applicant.id ? 'default' : 'outline'
+                }
+                onClick={() => handleApplicantChange(applicant)}
+                className="mb-2"
+              >
+                {applicant.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {requiredDocuments.length === 0 ? (
         <Alert>
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -372,13 +464,13 @@ export default function AttachmentsForm() {
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                       <div className="text-sm">
                         <label
-                          htmlFor={`file-${document}`}
+                          htmlFor={`file-${document}-${selectedApplicant.id}`}
                           className="relative cursor-pointer rounded-md font-medium text-primary"
                         >
                           <span>Upload a file</span>
                           <input
-                            id={`file-${document}`}
-                            name={`file-${document}`}
+                            id={`file-${document}-${selectedApplicant.id}`}
+                            name={`file-${document}-${selectedApplicant.id}`}
                             type="file"
                             className="sr-only"
                             onChange={e => {
@@ -403,14 +495,6 @@ export default function AttachmentsForm() {
                         <CheckCircle className="h-5 w-5 text-green-500" />
                         <span>File uploaded successfully</span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteDocument(document)}
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
                     </div>
                     {documentStatus[document]?.url && (
                       <a
@@ -466,8 +550,10 @@ export default function AttachmentsForm() {
               All documents uploaded
             </AlertTitle>
             <AlertDescription className="text-green-600">
-              You have successfully uploaded all required documents. You can now
-              proceed to the next step.
+              You have successfully uploaded all required documents for{' '}
+              {selectedApplicant.name}.
+              {applicants.length > 1 &&
+                ' Please ensure all applicants have uploaded their documents.'}
             </AlertDescription>
           </>
         ) : (
@@ -477,8 +563,10 @@ export default function AttachmentsForm() {
               Upload all required documents
             </AlertTitle>
             <AlertDescription className="text-amber-600">
-              Please upload all required documents before proceeding to the next
-              step.
+              Please upload all required documents for {selectedApplicant.name}{' '}
+              before proceeding.
+              {applicants.length > 1 &&
+                ' All applicants must upload their documents.'}
             </AlertDescription>
           </>
         )}

@@ -35,6 +35,13 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
 
+// phone input
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import { PhoneInput } from '../ui/phone-input';
+
+// country dropdown
+import { CountryDropdown } from '@/components/ui/country-dropdown';
+
 // Define accommodation types
 const accommodationTypes = [
   'Hotel',
@@ -50,7 +57,11 @@ const arrivalInfoSchema = z.object({
   arrivalDate: z.date({
     required_error: 'Please select an arrival date',
   }),
-  departureCountry: z.string().min(1, 'Please enter departure country'),
+  departureCountry: z
+    .string({
+      required_error: 'Please select a country',
+    })
+    .min(1, 'Please select a departure country'),
   departureCity: z.string().min(1, 'Please enter departure city'),
   airline: z.string().optional(),
   flightNumber: z.string().optional(),
@@ -62,14 +73,12 @@ const arrivalInfoSchema = z.object({
     .min(1, 'Please enter accommodation address'),
   accommodationTelephone: z
     .string()
-    .min(1, 'Please enter accommodation telephone'),
+    .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
 });
 
 type ArrivalInfoFormValues = z.infer<typeof arrivalInfoSchema>;
 
 export default function ArrivalInfoForm() {
-  console.log('ArrivalInfoForm rendering started');
-
   const {
     formId,
     emailAddress,
@@ -273,7 +282,14 @@ export default function ArrivalInfoForm() {
               <FormItem>
                 <FormLabel>Departure Country</FormLabel>
                 <FormControl>
-                  <Input placeholder="Country" {...field} />
+                  <CountryDropdown
+                    placeholder="Select departure country"
+                    defaultValue={field.value}
+                    onChange={country => {
+                      field.onChange(country.name);
+                    }}
+                    name={field.name}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -404,7 +420,8 @@ export default function ArrivalInfoForm() {
               <FormItem>
                 <FormLabel>Accommodation Telephone</FormLabel>
                 <FormControl>
-                  <Input placeholder="Telephone number" {...field} />
+                  {/* <Input placeholder="Telephone number" {...field} /> */}
+                  <PhoneInput placeholder="Enter a phone number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

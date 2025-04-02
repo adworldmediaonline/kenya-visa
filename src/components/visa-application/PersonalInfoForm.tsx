@@ -34,6 +34,11 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
+// country dropdown
+import { CountryDropdown } from '@/components/ui/country-dropdown';
+// phone input
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import { PhoneInput } from '../ui/phone-input';
 
 // Define gender options
 const genderOptions = ['Male', 'Female', 'Other'];
@@ -46,15 +51,29 @@ const personalInfoSchema = z.object({
     required_error: 'Date of birth is required',
   }),
   gender: z.string().min(1, 'Gender is required'),
-  citizenship: z.string().min(1, 'Nationality is required'),
-  countryOfBirth: z.string().min(1, 'Country of birth is required'),
+  citizenship: z
+    .string({
+      required_error: 'Please select a citizenship',
+    })
+    .min(1, 'Please select a citizenship'),
+  countryOfBirth: z
+    .string({
+      required_error: 'Please select a country of birth',
+    })
+    .min(1, 'Please select a country of birth'),
   placeOfBirth: z.string().min(1, 'Place of birth is required'),
   email: z.string().email('Please enter a valid email'),
-  phoneNumber: z.string().min(1, 'Phone number is required'),
+  phoneNumber: z
+    .string()
+    .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
   occupation: z.string().min(1, 'Occupation is required'),
   streetAddress: z.string().min(1, 'Street address is required'),
   addressCity: z.string().min(1, 'City is required'),
-  addressCountry: z.string().min(1, 'Country is required'),
+  addressCountry: z
+    .string({
+      required_error: 'Please select a address country',
+    })
+    .min(1, 'Please select a address country'),
 });
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
@@ -276,10 +295,16 @@ export default function PersonalInfoForm() {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
+                      variant="dob"
                       selected={field.value}
                       onSelect={field.onChange}
+                      defaultMonth={field.value || new Date(2000, 0)}
+                      fromYear={1920}
+                      toYear={new Date().getFullYear()}
+                      disabled={date =>
+                        date > new Date() || date < new Date('1900-01-01')
+                      }
                       initialFocus
-                      disabled={date => date > new Date()}
                     />
                   </PopoverContent>
                 </Popover>
@@ -322,7 +347,14 @@ export default function PersonalInfoForm() {
               <FormItem>
                 <FormLabel>Citizenship</FormLabel>
                 <FormControl>
-                  <Input placeholder="Nationality" {...field} />
+                  <CountryDropdown
+                    placeholder="Select citizenship"
+                    defaultValue={field.value}
+                    onChange={country => {
+                      field.onChange(country.name);
+                    }}
+                    name={field.name}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -337,7 +369,14 @@ export default function PersonalInfoForm() {
               <FormItem>
                 <FormLabel>Country of Birth</FormLabel>
                 <FormControl>
-                  <Input placeholder="Country of birth" {...field} />
+                  <CountryDropdown
+                    placeholder="Select country of birth"
+                    defaultValue={field.value}
+                    onChange={country => {
+                      field.onChange(country.name);
+                    }}
+                    name={field.name}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -397,7 +436,8 @@ export default function PersonalInfoForm() {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Phone number" {...field} />
+                  {/* <Input placeholder="Phone number" {...field} /> */}
+                  <PhoneInput placeholder="Enter a phone number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -442,7 +482,15 @@ export default function PersonalInfoForm() {
               <FormItem>
                 <FormLabel>Country</FormLabel>
                 <FormControl>
-                  <Input placeholder="Country" {...field} />
+                  {/* <Input placeholder="Country" {...field} /> */}
+                  <CountryDropdown
+                    placeholder="Select address country"
+                    defaultValue={field.value}
+                    onChange={country => {
+                      field.onChange(country.name);
+                    }}
+                    name={field.name}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
