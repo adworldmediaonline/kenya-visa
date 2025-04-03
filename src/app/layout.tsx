@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   title: 'Ethiopia e-Visa Portal',
   description:
     'The official portal for applying for an electronic visa to visit Ethiopia.',
+  robots: {
+    index: false,
+    googleBot: {
+      index: false,
+    },
+  },
 };
 
 export default function RootLayout({
