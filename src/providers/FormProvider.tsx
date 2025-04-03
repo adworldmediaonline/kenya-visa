@@ -15,7 +15,9 @@ type FormStep =
   | 'passport-info'
   | 'additional-applicants'
   | 'review'
-  | 'attachments';
+  | 'attachments'
+  | 'payment'
+  | 'confirmation';
 
 export interface FormData {
   [key: string]: unknown;
@@ -56,8 +58,10 @@ export default function FormProvider({ children }: { children: ReactNode }) {
     'personal-info': false,
     'passport-info': false,
     'additional-applicants': false,
-    review: false,
-    attachments: false,
+    'review': false,
+    'attachments': false,
+    'payment': false,
+    'confirmation': false
   });
 
   // Debug state changes

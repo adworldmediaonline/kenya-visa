@@ -9,6 +9,8 @@ import PassportInfoForm from './PassportInfoForm';
 import AdditionalApplicantsForm from './AdditionalApplicantsForm';
 import ReviewForm from './ReviewForm';
 import AttachmentsForm from './AttachmentsForm';
+import PaymentForm from './PaymentForm';
+import ConfirmationPage from './ConfirmationPage';
 
 interface MultiStepFormProps {
   title: string;
@@ -44,16 +46,14 @@ export default function MultiStepForm({
             {steps.map((step, index) => (
               <div
                 key={step.id}
-                className={`flex flex-col items-center ${
-                  index === steps.length - 1 ? '' : 'flex-1'
-                }`}
+                className={`flex flex-col items-center ${index === steps.length - 1 ? '' : 'flex-1'
+                  }`}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                    currentStep === step.id
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-muted-foreground/30 text-muted-foreground'
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${currentStep === step.id
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-muted-foreground/30 text-muted-foreground'
+                    }`}
                 >
                   {index + 1}
                 </div>
@@ -67,11 +67,10 @@ export default function MultiStepForm({
             {steps.slice(0, -1).map((_, index) => (
               <div
                 key={index}
-                className={`flex-1 ${
-                  steps.findIndex(s => s.id === currentStep) > index
-                    ? 'bg-primary'
-                    : 'bg-muted'
-                }`}
+                className={`flex-1 ${steps.findIndex(s => s.id === currentStep) > index
+                  ? 'bg-primary'
+                  : 'bg-muted'
+                  }`}
               />
             ))}
           </div>
@@ -87,6 +86,8 @@ export default function MultiStepForm({
           )}
           {currentStep === 'review' && <ReviewForm />}
           {currentStep === 'attachments' && <AttachmentsForm />}
+          {currentStep === 'payment' && <PaymentForm />}
+          {currentStep === 'confirmation' && <ConfirmationPage />}
         </Card>
       </div>
     </div>

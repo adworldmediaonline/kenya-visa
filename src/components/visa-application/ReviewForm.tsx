@@ -586,7 +586,7 @@ export default function ReviewForm() {
             <>
               <CardContent>
                 {Array.isArray(applicationData.additionalApplicants) &&
-                applicationData.additionalApplicants.length > 0 ? (
+                  applicationData.additionalApplicants.length > 0 ? (
                   <div className="space-y-4">
                     {applicationData.additionalApplicants.map(
                       (applicant, index) => (
@@ -652,7 +652,7 @@ export default function ReviewForm() {
                 >
                   <Edit2 className="h-4 w-4" />
                   {Array.isArray(applicationData.additionalApplicants) &&
-                  applicationData.additionalApplicants.length > 0
+                    applicationData.additionalApplicants.length > 0
                     ? 'Edit Additional Applicants'
                     : 'Add Additional Applicants'}
                 </Button>
@@ -670,7 +670,7 @@ export default function ReviewForm() {
         >
           Previous
         </Button>
-        <Button onClick={() => setCurrentStep('attachments')}>Next</Button>
+        <Button onClick={() => setCurrentStep('payment')}>Proceed to Payment</Button>
       </div>
     </div>
   );
