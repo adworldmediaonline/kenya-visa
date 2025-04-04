@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Loader2, AlertCircle, CreditCard } from 'lucide-react';
+import { Loader2, AlertCircle, CreditCard, CheckCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
 
 // Define payment status type
-type PaymentStatus = 'idle' | 'loading' | 'success' | 'error';
+type PaymentStatus = 'idle' | 'loading' | 'success' | 'error' | 'paid';
 
 interface VisaTypeData {
     name: string;
@@ -36,6 +36,7 @@ interface ApplicationData {
         email: string;
         phoneNumber: string;
     };
+    paymentStatus?: string;
     emailAddress?: string;
     additionalApplicants?: ApplicantInfo[];
 }
@@ -78,6 +79,12 @@ export default function PaymentForm() {
         },
         enabled: !!formId,
     });
+
+    useEffect(() => {
+        if (applicationData && applicationData.paymentStatus === 'paid') {
+            setPaymentStatus('paid');
+        }
+    }, [applicationData]);
 
     // Create Stripe session mutation
     const createStripeSessionMutation = useMutation({
@@ -260,11 +267,16 @@ export default function PaymentForm() {
                         onClick={handlePayment}
                         disabled={
                             paymentStatus === 'loading' ||
+                            paymentStatus === 'paid' ||
                             createStripeSessionMutation.isPending
                         }
                     >
-                        {paymentStatus === 'loading' ||
-                            createStripeSessionMutation.isPending ? (
+                        {paymentStatus === "paid" ? (
+                            <>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Payment Already Successful
+                            </>
+                        ) : paymentStatus === 'loading' || createStripeSessionMutation.isPending ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Processing...
