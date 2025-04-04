@@ -58,10 +58,10 @@ export default function FormProvider({ children }: { children: ReactNode }) {
     'personal-info': false,
     'passport-info': false,
     'additional-applicants': false,
-    'review': false,
-    'attachments': false,
-    'payment': false,
-    'confirmation': false
+    review: false,
+    attachments: false,
+    payment: false,
+    confirmation: false,
   });
 
   // Debug state changes

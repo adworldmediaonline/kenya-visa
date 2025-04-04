@@ -28,12 +28,29 @@ import { visaApi } from '@/lib/api/endpoints';
 import { Loader2 } from 'lucide-react';
 
 // Define the form schema with Zod
-const visaDetailsSchema = z.object({
-  emailAddress: z.string().email('Please enter a valid email address'),
-  visaType: z.string().min(1, 'Please select a visa type'),
-  visaValidity: z.string().min(1, 'Please select a visa validity'),
-  companyReferenceNumber: z.string().optional(),
-});
+const visaDetailsSchema = z
+  .object({
+    emailAddress: z.string().email('Please enter a valid email address'),
+    visaType: z.string().min(1, 'Please select a visa type'),
+    visaValidity: z.string().min(1, 'Please select a visa validity'),
+    companyReferenceNumber: z.string().optional(),
+  })
+  .refine(
+    data => {
+      // Company reference number is required for visa types other than Tourist and Business/Related Studies
+      if (
+        data.visaType !== 'Tourist Visa' &&
+        data.visaType !== 'Business and Related Studies Visa'
+      ) {
+        return !!data.companyReferenceNumber; // Must not be empty
+      }
+      return true; // For Tourist and Business visa types, it's optional
+    },
+    {
+      message: 'Company Reference Number is required for this visa type',
+      path: ['companyReferenceNumber'],
+    }
+  );
 
 type VisaDetailsFormValues = z.infer<typeof visaDetailsSchema>;
 
@@ -285,29 +302,31 @@ export default function VisaDetailsForm() {
           />
         )}
 
-        {selectedVisaType && (
-          <FormField
-            control={form.control}
-            name="companyReferenceNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Company Reference Number (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Reference number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {selectedVisaType &&
+          selectedVisaType !== 'Tourist Visa' &&
+          selectedVisaType !== 'Business and Related Studies Visa' && (
+            <FormField
+              control={form.control}
+              name="companyReferenceNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Reference Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Reference number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending
               ? 'Submitting...'
               : isUpdate
-                ? 'Update & Continue'
-                : 'Next'}
+              ? 'Update & Continue'
+              : 'Next'}
           </Button>
         </div>
       </form>
