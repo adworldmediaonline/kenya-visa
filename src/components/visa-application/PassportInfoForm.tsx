@@ -334,11 +334,11 @@ export default function PassportInfoForm() {
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
+                      variant="passport-expiry"
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      initialFocus
-                      disabled={date => date <= new Date()}
+                      className="rounded-md border"
                     />
                   </PopoverContent>
                 </Popover>
