@@ -44,6 +44,10 @@ const PaymentStatusContent = () => {
                 applicationId: data.applicationId || data._id,
             });
             setLoading(false);
+            setTimeout(() => {
+                localStorage.setItem('ethiopiaCurrentStep', 'attachments');
+                window.location.href = '/apply'
+            }, 5000);
         },
         onError: (error) => {
             console.error('Error verifying payment:', error);
@@ -81,7 +85,7 @@ const PaymentStatusContent = () => {
             });
             setLoading(false);
         }
-    }, [searchParams, verifyPaymentMutation]);
+    }, []);
 
     if (loading) {
         return (
