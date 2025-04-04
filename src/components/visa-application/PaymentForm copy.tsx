@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Loader2, AlertCircle, CreditCard } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
+import Script from 'next/script';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,10 +15,28 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useFormContext } from '@/providers/FormProvider';
-import { visaApi } from '@/lib/api/endpoints';
+import {
+    visaApi,
+    CreatePaymentOrderRequest,
+    VerifyPaymentRequest,
+} from '@/lib/api/endpoints';
 
 // Define payment status type
 type PaymentStatus = 'idle' | 'loading' | 'success' | 'error';
+
+// Define types for API responses
+interface OrderData {
+    key: string;
+    amount: number;
+    currency: string;
+    orderId: string;
+}
+
+interface RazorpayResponse {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+}
 
 interface VisaTypeData {
     name: string;
@@ -56,6 +75,7 @@ export default function PaymentForm() {
     const { formId, setCurrentStep } = useFormContext();
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
     const [paymentError, setPaymentError] = useState<string | null>(null);
+    const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
     // Fetch visa types to get pricing information
     const { data: visaTypesData } = useQuery({
@@ -79,22 +99,37 @@ export default function PaymentForm() {
         enabled: !!formId,
     });
 
-    // Create Stripe session mutation
-    const createStripeSessionMutation = useMutation({
-        mutationFn: (data: { formId: string }) => visaApi.createStripeSession(data),
-        onSuccess: (data) => {
-            // Redirect to Stripe checkout page
-            if (data && data.session_url) {
-                window.location.href = data.session_url;
-            } else {
-                setPaymentStatus('error');
-                setPaymentError('Failed to create payment session');
-            }
+    // Create payment order mutation
+    const createOrderMutation = useMutation({
+        mutationFn: (data: CreatePaymentOrderRequest) =>
+            visaApi.createPaymentOrder(data),
+        onSuccess: (orderData: OrderData) => {
+            // Initialize Razorpay checkout with the order data
+            initializeRazorpay(orderData);
         },
         onError: (error: Error) => {
-            console.error('Stripe session creation error:', error);
+            console.error('Payment initialization error:', error);
             setPaymentStatus('error');
             setPaymentError(error.message || 'Failed to initialize payment');
+        },
+    });
+
+    // Verify payment mutation
+    const verifyPaymentMutation = useMutation({
+        mutationFn: (data: VerifyPaymentRequest) => visaApi.verifyPayment(data),
+        onSuccess: () => {
+            setPaymentStatus('success');
+            // After successful payment, move to the next step or show confirmation
+            setTimeout(() => {
+                setCurrentStep('confirmation');
+            }, 2000);
+        },
+        onError: (error: Error) => {
+            console.error('Payment verification error:', error);
+            setPaymentStatus('error');
+            setPaymentError(
+                'Payment verification failed. Please contact support.'
+            );
         },
     });
 
@@ -150,14 +185,79 @@ export default function PaymentForm() {
         };
     };
 
+    interface RazorpayOptions {
+        key: string;
+        amount: number;
+        currency: string;
+        name: string;
+        description: string;
+        order_id: string;
+        handler: (response: RazorpayResponse) => void;
+        prefill: {
+            name: string;
+            email: string;
+            contact: string;
+        };
+        theme: {
+            color: string;
+        };
+        modal: {
+            ondismiss: () => void;
+        };
+    }
+
+    const initializeRazorpay = (orderData: OrderData) => {
+        // Initialize Razorpay checkout
+        const options: RazorpayOptions = {
+            key: orderData.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
+            amount: orderData.amount * 100, // Razorpay expects amount in paise
+            currency: orderData.currency || 'USD',
+            name: 'Ethiopia Visa Services',
+            description: 'Visa Application Fee',
+            order_id: orderData.orderId,
+            handler: function (response: RazorpayResponse) {
+                handlePaymentSuccess(response);
+            },
+            prefill: {
+                name: `${applicationData?.personalInfo?.givenName || ''} ${applicationData?.personalInfo?.surname || ''}`,
+                email:
+                    applicationData?.personalInfo?.email || applicationData?.emailAddress || '',
+                contact: applicationData?.personalInfo?.phoneNumber || '',
+            },
+            theme: {
+                color: '#078930', // Ethiopia green
+            },
+            modal: {
+                ondismiss: function () {
+                    setPaymentStatus('idle');
+                },
+            },
+        };
+
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
+    };
+
     const handlePayment = async () => {
-        if (!formId) return;
+        if (!formId || !razorpayLoaded) return;
 
         setPaymentStatus('loading');
         setPaymentError(null);
 
-        // Create Stripe payment session
-        createStripeSessionMutation.mutate({ formId });
+        // Create payment order using mutation
+        createOrderMutation.mutate({
+            formId,
+        });
+    };
+
+    const handlePaymentSuccess = async (paymentResponse: RazorpayResponse) => {
+        // Verify payment using mutation
+        verifyPaymentMutation.mutate({
+            formId: formId!,
+            paymentId: paymentResponse.razorpay_payment_id,
+            orderId: paymentResponse.razorpay_order_id,
+            signature: paymentResponse.razorpay_signature,
+        });
     };
 
     if (isLoadingApplication) {
@@ -198,6 +298,11 @@ export default function PaymentForm() {
 
     return (
         <div className="space-y-6">
+            <Script
+                src="https://checkout.razorpay.com/v1/checkout.js"
+                onLoad={() => setRazorpayLoaded(true)}
+            />
+
             <div className="space-y-4">
                 <h2 className="text-2xl font-semibold">Payment</h2>
                 <p className="text-muted-foreground">
@@ -243,7 +348,18 @@ export default function PaymentForm() {
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
-                    {paymentStatus === 'error' && (
+                    {paymentStatus === 'success' ? (
+                        <Alert className="bg-green-50 border-green-200">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <AlertTitle className="text-green-800">
+                                Payment Successful
+                            </AlertTitle>
+                            <AlertDescription className="text-green-700">
+                                Your payment has been processed successfully. Redirecting to
+                                confirmation page...
+                            </AlertDescription>
+                        </Alert>
+                    ) : paymentStatus === 'error' ? (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
                             <AlertTitle>Payment Failed</AlertTitle>
@@ -252,7 +368,7 @@ export default function PaymentForm() {
                                     'There was an error processing your payment. Please try again.'}
                             </AlertDescription>
                         </Alert>
-                    )}
+                    ) : null}
 
                     <Button
                         className="w-full"
@@ -260,11 +376,15 @@ export default function PaymentForm() {
                         onClick={handlePayment}
                         disabled={
                             paymentStatus === 'loading' ||
-                            createStripeSessionMutation.isPending
+                            paymentStatus === 'success' ||
+                            !razorpayLoaded ||
+                            createOrderMutation.isPending ||
+                            verifyPaymentMutation.isPending
                         }
                     >
                         {paymentStatus === 'loading' ||
-                            createStripeSessionMutation.isPending ? (
+                            createOrderMutation.isPending ||
+                            verifyPaymentMutation.isPending ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Processing...
