@@ -1,13 +1,29 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { visaApi } from '@/lib/api/endpoints';
 
-const PaymentStatus = () => {
+// Loading component to show while the main component is loading
+const PaymentStatusLoading = () => (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md p-8 space-y-4 bg-white rounded-lg shadow-md">
+            <div className="text-center">
+                <h1 className="text-2xl font-bold mb-4">Loading Payment Status</h1>
+                <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ethiopia-green"></div>
+                </div>
+                <p className="mt-4 text-gray-600">Please wait...</p>
+            </div>
+        </div>
+    </div>
+);
+
+// The main component that uses useSearchParams
+const PaymentStatusContent = () => {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [paymentDetails, setPaymentDetails] = useState<{
@@ -54,21 +70,18 @@ const PaymentStatus = () => {
             return;
         }
 
-        // Set initial payment status based on URL parameters
-
-        // setPaymentDetails({
-        //     success,
-        //     sessionId: sessionId || undefined,
-        // });
-
         // If we have a session ID, verify the payment with our backend
         if (sessionId) {
             verifyPaymentMutation.mutate(sessionId);
         } else {
             // No session ID, can't verify
+            setPaymentDetails({
+                success,
+                sessionId: sessionId || undefined,
+            });
             setLoading(false);
         }
-    }, [searchParams]);
+    }, [searchParams, verifyPaymentMutation]);
 
     if (loading) {
         return (
@@ -122,23 +135,32 @@ const PaymentStatus = () => {
                             Your payment was not completed successfully. Please try again or contact support if you believe this is an error.
                         </p>
                         {/* <div className="mt-6 space-y-3">
-                            <Link
-                                href="/visa-application"
-                                className="inline-block w-full px-6 py-3 bg-ethiopia-green text-white font-medium rounded-md hover:bg-opacity-90 transition-colors"
-                            >
-                                Try Again
-                            </Link>
-                            <Link
-                                href="/contact"
-                                className="inline-block w-full px-6 py-3 border border-ethiopia-green text-ethiopia-green font-medium rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Contact Support
-                            </Link>
-                        </div> */}
+              <Link
+                href="/visa-application"
+                className="inline-block w-full px-6 py-3 bg-ethiopia-green text-white font-medium rounded-md hover:bg-opacity-90 transition-colors"
+              >
+                Try Again
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-block w-full px-6 py-3 border border-ethiopia-green text-ethiopia-green font-medium rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Contact Support
+              </Link>
+            </div> */}
                     </div>
                 )}
             </div>
         </div>
+    );
+};
+
+// Main component that wraps the content with Suspense
+const PaymentStatus = () => {
+    return (
+        <Suspense fallback={<PaymentStatusLoading />}>
+            <PaymentStatusContent />
+        </Suspense>
     );
 };
 
