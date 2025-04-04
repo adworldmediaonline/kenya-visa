@@ -435,4 +435,28 @@ export const visaApi = {
       throw error;
     }
   },
+
+  createStripeSession: async (data: { formId: string }) => {
+    try {
+      const response = await apiClient.post('/payments/stripe-payment', data);
+      console.log("Create Stripe Session Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.log("Create Stripe Session Error:", error);
+      console.error('Error creating Stripe session:', error);
+      throw error;
+    }
+  },
+
+  verifyStripePayment: async (data: { sessionId: string }) => {
+    try {
+      const response = await apiClient.post('/payments/stripe-verify-payment', data);
+      console.log("Verify Stripe Payment Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.log("Verify Stripe Payment Error:", error);
+      console.error('Error verifying Stripe payment:', error);
+      throw error;
+    }
+  },
 };
