@@ -99,7 +99,7 @@ export default function ConfirmationPage() {
     };
 
     const handleViewDashboard = () => {
-        router.push('/dashboard');
+        router.push('/status');
     };
 
     if (isLoading) {
@@ -220,7 +220,7 @@ export default function ConfirmationPage() {
                         Print Confirmation
                     </Button>
                     <Button className="ml-auto" onClick={handleViewDashboard}>
-                        View Dashboard
+                        View Status
                     </Button>
                 </CardFooter>
             </Card>

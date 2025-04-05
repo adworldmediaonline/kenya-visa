@@ -4,26 +4,48 @@ import MainLayout from '@/components/layout/MainLayout';
 import { visaApi } from '@/lib/api/endpoints';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Search, CheckCircle, XCircle, Clock, Info } from "lucide-react";
+import { Loader2, Search, CheckCircle, XCircle, Clock, Info, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+
+interface ApplicationData {
+    lastExitUrl?: string;
+    paymentStatus?: string;
+    applicationStatus?: string;
+    formId?: string;
+}
 
 export default function StatusPage() {
     const [applicationId, setApplicationId] = useState('');
     const [email, setEmail] = useState('');
+    const router = useRouter();
 
     const { mutate: checkStatus, data, isPending, isError, error } = useMutation({
         mutationFn: visaApi.checkApplicationStatus,
     });
 
+    const { mutate: fetchApplication, data: applicationData, isPending: isLoadingApplication } = useMutation({
+        mutationFn: async () => {
+            try {
+                const response = await visaApi.getVisaApplication(applicationId);
+                return response as ApplicationData;
+            } catch (error) {
+                console.error('Error fetching application:', error);
+                throw new Error('Failed to fetch application details');
+            }
+        }
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         checkStatus({ applicationId, email });
+        fetchApplication();
     };
 
     const getStatusIcon = (status: string) => {
@@ -45,6 +67,53 @@ export default function StatusPage() {
                 return "bg-red-100 text-red-800 hover:bg-red-100";
             default:
                 return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
+        }
+    };
+
+    const getContinueUrl = () => {
+        if (!applicationData) return null;
+
+        if (applicationData.lastExitUrl === 'payment') {
+            return `/payment/${applicationId}`;
+        } else if (applicationData.applicationStatus === "submitted" && applicationData.paymentStatus === "pending") {
+            return `/payment/${applicationId}`;
+        } else if (applicationData.lastExitUrl === 'attachments') {
+            return `/docs/${applicationId}`;
+        } else if (applicationData.lastExitUrl === 'review') {
+            return `/apply/${applicationId}`;
+        } else if (applicationData.lastExitUrl === 'additional-applicants') {
+            return `/apply/${applicationId}`;
+        } else if (applicationData.lastExitUrl === 'passport-info') {
+            return `/apply/${applicationId}`;
+        } else if (applicationData.lastExitUrl === 'personal-info') {
+            return `/apply/${applicationId}`;
+        } else if (applicationData.lastExitUrl === 'arrival-info') {
+            return `/apply/${applicationId}`;
+        } else if (applicationData.lastExitUrl === 'visa-details') {
+            return `/apply/${applicationId}`;
+        }
+
+        return null;
+    };
+
+    const getButtonText = () => {
+        if (!applicationData) return 'Continue Application';
+
+        if (applicationData.lastExitUrl === 'payment') {
+            return 'Make Payment';
+        } else if (applicationData.applicationStatus === "submitted" && applicationData.paymentStatus === "pending") {
+            return 'Make Payment';
+        } else if (applicationData.lastExitUrl === 'attachments') {
+            return 'Upload Documents';
+        }
+
+        return 'Continue Application';
+    };
+
+    const handleContinue = () => {
+        const url = getContinueUrl();
+        if (url) {
+            router.push(url);
         }
     };
 
@@ -94,9 +163,9 @@ export default function StatusPage() {
                             <Button
                                 type="submit"
                                 className="w-full bg-green-600 hover:bg-green-700"
-                                disabled={isPending}
+                                disabled={isPending || isLoadingApplication}
                             >
-                                {isPending ? (
+                                {isPending || isLoadingApplication ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Checking Status
@@ -171,6 +240,44 @@ export default function StatusPage() {
                                     </div>
                                 </>
                             )}
+
+                            {/* Continue Application Button */}
+                            {applicationData && data.status !== 'APPROVED' && data.status !== 'REJECTED' && (
+                                <>
+                                    <Separator className="my-6" />
+                                    <div className="mt-4">
+                                        <h3 className="text-sm font-medium text-gray-500 mb-2">Continue Your Application</h3>
+                                        <Button
+                                            onClick={handleContinue}
+                                            className="w-full bg-green-600 hover:bg-green-700"
+                                        >
+                                            {getButtonText()}
+                                            <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Show continue application option even if status check fails but application data is found */}
+                {!data && applicationData && (
+                    <Card className="mt-8">
+                        <CardHeader>
+                            <CardTitle>Application Found</CardTitle>
+                            <CardDescription>
+                                You can continue your application from where you left off
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button
+                                onClick={handleContinue}
+                                className="w-full bg-green-600 hover:bg-green-700"
+                            >
+                                {getButtonText()}
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
                         </CardContent>
                     </Card>
                 )}
