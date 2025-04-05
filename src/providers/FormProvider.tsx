@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 
-type FormStep =
+export type FormStep =
   | 'visa-details'
   | 'arrival-info'
   | 'personal-info'
