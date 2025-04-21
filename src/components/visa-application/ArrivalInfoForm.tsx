@@ -16,14 +16,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -35,45 +27,27 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
 
-// phone input
-import { isValidPhoneNumber } from 'react-phone-number-input';
-import { PhoneInput } from '../ui/phone-input';
-
 // country dropdown
 import { CountryDropdown } from '@/components/ui/country-dropdown';
 
-// Define accommodation types
-const accommodationTypes = [
-  'Hotel',
-  'Hostel',
-  'Airbnb',
-  'Family/Friend',
-  'Business Accommodation',
-  'Other',
-];
-
 // Define the form schema with Zod
 const arrivalInfoSchema = z.object({
-  arrivalDate: z.date({
-    required_error: 'Please select an arrival date',
-  }),
-  departureCountry: z
+  travellingFrom: z
     .string({
       required_error: 'Please select a country',
     })
-    .min(1, 'Please select a departure country'),
-  departureCity: z.string().min(1, 'Please enter departure city'),
-  airline: z.string().optional(),
-  flightNumber: z.string().optional(),
-  accommodationType: z.string().min(1, 'Please select accommodation type'),
-  accommodationName: z.string().min(1, 'Please enter accommodation name'),
-  accommodationCity: z.string().min(1, 'Please enter accommodation city'),
-  accommodationStreetAddress: z
-    .string()
-    .min(1, 'Please enter accommodation address'),
-  accommodationTelephone: z
-    .string()
-    .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
+    .min(1, 'Please select a country you are travelling from'),
+  arrivalDate: z.date({
+    required_error: 'Please select an arrival date',
+  }),
+  departureDate: z.date({
+    required_error: 'Please select a departure date',
+  }),
+}).refine(data => {
+  return data.departureDate > data.arrivalDate;
+}, {
+  message: "Departure date must be after arrival date",
+  path: ["departureDate"],
 });
 
 type ArrivalInfoFormValues = z.infer<typeof arrivalInfoSchema>;
@@ -98,16 +72,9 @@ export default function ArrivalInfoForm() {
   const form = useForm<ArrivalInfoFormValues>({
     resolver: zodResolver(arrivalInfoSchema),
     defaultValues: {
+      travellingFrom: '',
       arrivalDate: new Date(),
-      departureCountry: '',
-      departureCity: '',
-      airline: '',
-      flightNumber: '',
-      accommodationType: '',
-      accommodationName: '',
-      accommodationCity: '',
-      accommodationStreetAddress: '',
-      accommodationTelephone: '',
+      departureDate: new Date(new Date().setDate(new Date().getDate() + 7)), // Default to 7 days after arrival
     },
   });
 
@@ -140,19 +107,13 @@ export default function ArrivalInfoForm() {
       // Use setTimeout to ensure the reset happens after the form is fully initialized
       setTimeout(() => {
         form.reset({
+          travellingFrom: arrivalInfo.travellingFrom || '',
           arrivalDate: arrivalInfo.arrivalDate
             ? new Date(arrivalInfo.arrivalDate)
             : new Date(),
-          departureCountry: arrivalInfo.departureCountry || '',
-          departureCity: arrivalInfo.departureCity || '',
-          airline: arrivalInfo.airline || '',
-          flightNumber: arrivalInfo.flightNumber || '',
-          accommodationType: arrivalInfo.accommodationType || '',
-          accommodationName: arrivalInfo.accommodationName || '',
-          accommodationCity: arrivalInfo.accommodationCity || '',
-          accommodationStreetAddress:
-            arrivalInfo.accommodationStreetAddress || '',
-          accommodationTelephone: arrivalInfo.accommodationTelephone || '',
+          departureDate: arrivalInfo.departureDate
+            ? new Date(arrivalInfo.departureDate)
+            : new Date(new Date().setDate(new Date().getDate() + 7)),
         });
       }, 0);
     }
@@ -167,11 +128,11 @@ export default function ArrivalInfoForm() {
 
       console.log('ArrivalInfoForm - Submitting with formId:', formId);
 
-      // Convert the date to ISO string for the API
+      // Convert the dates to ISO string for the API
       const formattedValues = {
         ...values,
         formId: formId,
-        arrivalDate: values.arrivalDate.toISOString(),
+        arrivalDate: values.arrivalDate.toISOString()
       };
 
       if (isUpdate) {
@@ -228,11 +189,33 @@ export default function ArrivalInfoForm() {
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">Arrival Information</h2>
           <p className="text-muted-foreground">
-            Please provide details about your arrival in Ethiopia
+            Please provide details about your travel to Egypt
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Travelling From */}
+          <FormField
+            control={form.control}
+            name="travellingFrom"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Travelling From</FormLabel>
+                <FormControl>
+                  <CountryDropdown
+                    placeholder="Select country you are travelling from"
+                    defaultValue={field.value}
+                    onChange={country => {
+                      field.onChange(country.name);
+                    }}
+                    name={field.name}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Arrival Date */}
           <FormField
             control={form.control}
@@ -274,155 +257,42 @@ export default function ArrivalInfoForm() {
             )}
           />
 
-          {/* Departure Country */}
+          {/* Departure Date */}
           <FormField
             control={form.control}
-            name="departureCountry"
+            name="departureDate"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Departure Country</FormLabel>
-                <FormControl>
-                  <CountryDropdown
-                    placeholder="Select departure country"
-                    defaultValue={field.value}
-                    onChange={country => {
-                      field.onChange(country.name);
-                    }}
-                    name={field.name}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Departure City */}
-          <FormField
-            control={form.control}
-            name="departureCity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Departure City</FormLabel>
-                <FormControl>
-                  <Input placeholder="City" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Airline (Optional) */}
-          <FormField
-            control={form.control}
-            name="airline"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Airline (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Airline name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Flight Number (Optional) */}
-          <FormField
-            control={form.control}
-            name="flightNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Flight Number (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Flight number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Accommodation Type */}
-          <FormField
-            control={form.control}
-            name="accommodationType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select accommodation type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {accommodationTypes.map(type => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Accommodation Name */}
-          <FormField
-            control={form.control}
-            name="accommodationName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Hotel/hostel/place name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Accommodation City */}
-          <FormField
-            control={form.control}
-            name="accommodationCity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation City</FormLabel>
-                <FormControl>
-                  <Input placeholder="City" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Accommodation Street Address */}
-          <FormField
-            control={form.control}
-            name="accommodationStreetAddress"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="Street address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Accommodation Telephone */}
-          <FormField
-            control={form.control}
-            name="accommodationTelephone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Telephone</FormLabel>
-                <FormControl>
-                  {/* <Input placeholder="Telephone number" {...field} /> */}
-                  <PhoneInput placeholder="Enter a phone number" {...field} />
-                </FormControl>
+              <FormItem className="flex flex-col">
+                <FormLabel>Departure Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={date => date < form.getValues().arrivalDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
@@ -441,8 +311,8 @@ export default function ArrivalInfoForm() {
             {mutation.isPending
               ? 'Submitting...'
               : isUpdate
-              ? 'Update & Continue'
-              : 'Next'}
+                ? 'Update & Continue'
+                : 'Next'}
           </Button>
         </div>
       </form>

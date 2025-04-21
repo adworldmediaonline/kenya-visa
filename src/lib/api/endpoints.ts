@@ -32,16 +32,9 @@ export interface VisaDetailsResponse {
 // Arrival info interfaces
 export interface ArrivalInfoRequest {
   formId: string;
+  travellingFrom: string;
   arrivalDate: string;
-  departureCountry: string;
-  departureCity: string;
-  airline?: string;
-  flightNumber?: string;
-  accommodationType: string;
-  accommodationName: string;
-  accommodationCity: string;
-  accommodationStreetAddress: string;
-  accommodationTelephone: string;
+  departureDate: Date;
 }
 
 // Personal info interfaces
@@ -87,6 +80,23 @@ export interface VerifyPaymentRequest {
   signature: string;
 }
 
+// Declaration info interfaces
+export interface DeclarationInfoData {
+  visitedBefore: boolean;
+  dateFrom?: Date | string | null;
+  dateTo?: Date | string | null;
+  whereStayed?: string;
+  deportedFromEgyptOrOtherCountry: boolean;
+  deportedDateFrom?: Date | string | null;
+  deportedDateTo?: Date | string | null;
+  whoIsPaying: string;
+  hostType?: string;
+  hostName?: string;
+  hostPhoneNumber?: string;
+  hostEmail?: string;
+  hostAddress?: string;
+}
+
 export const visaApi = {
   // Check application status
   checkApplicationStatus: async (
@@ -100,7 +110,7 @@ export const visaApi = {
   getVisaApplication: async (applicationId: string) => {
     try {
       const response = await apiClient.get(`/${applicationId}`);
-      return response.data;
+      return response.data?.data;
     } catch (error: unknown) {
       const err = error as { message: string; response?: { status: number } };
       console.error('Error fetching visa application:', err.message);
@@ -348,6 +358,71 @@ export const visaApi = {
       `/additional-applicants/${formId}/${applicantIndex}`
     );
     return response.data;
+  },
+
+  // Declaration info methods
+  createDeclaration: async (
+    formId: string,
+    data: Partial<DeclarationInfoData>
+  ) => {
+    console.log('API - createDeclaration called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to createDeclaration');
+      throw new Error('Form ID is required for creating declaration information');
+    }
+
+    try {
+      const response = await apiClient.post('/declarations', {
+        ...data,
+        formId: formId,
+      });
+      console.log('API - createDeclaration response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - createDeclaration error:', error);
+      throw error;
+    }
+  },
+
+  getDeclaration: async (formId: string) => {
+    console.log('API - getDeclaration called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to getDeclaration');
+      return null;
+    }
+
+    try {
+      const response = await apiClient.get(`/declarations/${formId}`);
+      console.log('API - getDeclaration response:', response.data);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { message: string; response?: { status: number } };
+      console.error('Error fetching declaration info:', err.message);
+      if (err.response?.status === 404) {
+        return null; // Return null for not found
+      }
+      throw error; // Re-throw other errors
+    }
+  },
+
+  updateDeclaration: async (
+    formId: string,
+    data: Partial<DeclarationInfoData>
+  ) => {
+    console.log('API - updateDeclaration called with formId:', formId);
+    if (!formId) {
+      console.error('No formId provided to updateDeclaration');
+      throw new Error('Form ID is required for updating declaration information');
+    }
+
+    try {
+      const response = await apiClient.put(`/declarations/${formId}`, data);
+      console.log('API - updateDeclaration response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - updateDeclaration error:', error);
+      throw error;
+    }
   },
 
   // Document management methods

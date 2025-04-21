@@ -20,7 +20,7 @@ function VisaApplicationContent() {
   const { currentStep } = useFormContext();
 
   // Title is constant for the application
-  const title = 'Apply for Ethiopia Visa';
+  const title = 'Apply for Egypt Visa';
 
   // Description is dynamic based on current step
   let description =
@@ -36,6 +36,8 @@ function VisaApplicationContent() {
     description = 'Enter your passport details.';
   } else if (currentStep === 'additional-applicants') {
     description = 'Add or manage additional applicants traveling with you.';
+  } else if (currentStep === 'declaration') {
+    description = 'Review your application before submission.';
   } else if (currentStep === 'review') {
     description = 'Review your application before submission.';
   } else if (currentStep === 'attachments') {

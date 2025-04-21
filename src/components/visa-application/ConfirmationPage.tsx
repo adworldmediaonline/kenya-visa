@@ -128,7 +128,7 @@ export default function ConfirmationPage() {
         <div className="space-y-6">
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                    <CheckCircle className="h-8 w-8 text-blue-600" />
                     <h2 className="text-2xl font-semibold">Application Submitted Successfully</h2>
                 </div>
                 <p className="text-muted-foreground">
@@ -174,14 +174,14 @@ export default function ConfirmationPage() {
                             </div>
                         </div>
 
-                        <div className="rounded-md bg-green-50 p-4 mt-6">
+                        <div className="rounded-md bg-blue-50 p-4 mt-6">
                             <div className="flex">
                                 <div className="flex-shrink-0">
-                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                    <CheckCircle className="h-5 w-5 text-blue-600" />
                                 </div>
                                 <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-green-800">Payment Successful</h3>
-                                    <div className="mt-2 text-sm text-green-700">
+                                    <h3 className="text-sm font-medium text-blue-800">Payment Successful</h3>
+                                    <div className="mt-2 text-sm text-blue-700">
                                         <p>
                                             Your payment has been processed successfully. You will receive a confirmation email with your application details shortly.
                                         </p>

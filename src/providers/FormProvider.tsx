@@ -14,6 +14,7 @@ export type FormStep =
   | 'personal-info'
   | 'passport-info'
   | 'additional-applicants'
+  | 'declaration'
   | 'review'
   | 'attachments'
   | 'payment'
@@ -58,6 +59,7 @@ export default function FormProvider({ children }: { children: ReactNode }) {
     'personal-info': false,
     'passport-info': false,
     'additional-applicants': false,
+    declaration: false,
     review: false,
     attachments: false,
     payment: false,
@@ -78,14 +80,14 @@ export default function FormProvider({ children }: { children: ReactNode }) {
   // Load form state from localStorage on initial mount
   useEffect(() => {
     try {
-      const savedFormId = localStorage.getItem('ethiopiaFormId');
-      const savedEmailAddress = localStorage.getItem('ethiopiaEmailAddress');
-      const savedFormData = localStorage.getItem('ethiopiaFormData');
+      const savedFormId = localStorage.getItem('kenyaFormId');
+      const savedEmailAddress = localStorage.getItem('kenyaEmailAddress');
+      const savedFormData = localStorage.getItem('kenyaFormData');
       const savedStepCompletion = localStorage.getItem(
-        'ethiopiaStepCompletion'
+        'kenyaStepCompletion'
       );
       const savedCurrentStep = localStorage.getItem(
-        'ethiopiaCurrentStep'
+        'kenyaCurrentStep'
       ) as FormStep | null;
 
       console.log('Loading from localStorage:', {
@@ -104,8 +106,8 @@ export default function FormProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error loading form state from localStorage:', error);
       // Clear potentially corrupted data
-      localStorage.removeItem('ethiopiaFormData');
-      localStorage.removeItem('ethiopiaStepCompletion');
+      localStorage.removeItem('kenyaFormData');
+      localStorage.removeItem('kenyaStepCompletion');
     }
   }, []);
 
@@ -113,17 +115,17 @@ export default function FormProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       if (formId) {
-        localStorage.setItem('ethiopiaFormId', formId);
+        localStorage.setItem('kenyaFormId', formId);
         console.log('FormProvider - Saved formId to localStorage:', formId);
       }
       if (emailAddress)
-        localStorage.setItem('ethiopiaEmailAddress', emailAddress);
-      localStorage.setItem('ethiopiaFormData', JSON.stringify(formData));
+        localStorage.setItem('kenyaEmailAddress', emailAddress);
+      localStorage.setItem('kenyaFormData', JSON.stringify(formData));
       localStorage.setItem(
-        'ethiopiaStepCompletion',
+        'kenyaStepCompletion',
         JSON.stringify(isCompleted)
       );
-      localStorage.setItem('ethiopiaCurrentStep', currentStep);
+      localStorage.setItem('kenyaCurrentStep', currentStep);
 
       console.log('Saving to localStorage:', {
         formId,
@@ -161,7 +163,7 @@ export default function FormProvider({ children }: { children: ReactNode }) {
       return;
     }
     setFormId(id);
-    localStorage.setItem('ethiopiaFormId', id);
+    localStorage.setItem('kenyaFormId', id);
   };
 
   return (

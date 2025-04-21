@@ -8,9 +8,9 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Ethiopia e-Visa Portal',
+  title: 'Kenya e-Visa Portal',
   description:
-    'The official portal for applying for an electronic visa to visit Ethiopia.',
+    'The official portal for applying for an electronic visa to visit Kenya.',
   robots: {
     index: false,
     googleBot: {

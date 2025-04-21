@@ -172,7 +172,7 @@ export default function PaymentForm() {
     if (isLoadingApplication) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-ethiopia-green" />
+                <Loader2 className="h-8 w-8 animate-spin text-ethiopia-blue" />
                 <span className="ml-2 text-lg">Loading payment information...</span>
             </div>
         );
@@ -216,7 +216,7 @@ export default function PaymentForm() {
                 <div className="max-w-3xl mx-auto">
                     <div className="space-y-6">
                         <div className="space-y-4">
-                            <h2 className="text-2xl font-semibold">Payment for <span className='text-green-700'>Application ID : {formId}</span></h2>
+                            <h2 className="text-2xl font-semibold">Payment for <span className='text-blue-700'>Application ID : {formId}</span></h2>
                             <p className="text-muted-foreground">
                                 Complete your visa application by paying the processing fee
                             </p>

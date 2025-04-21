@@ -532,7 +532,7 @@ export default function AttachmentsForm() {
                 <div className="max-w-3xl mx-auto">
                     <div className="space-y-6">
                         <div className="space-y-4">
-                            <h2 className="text-2xl font-semibold">Required Documents for <span className='text-green-700'>Application ID : {formId}</span></h2>
+                            <h2 className="text-2xl font-semibold">Required Documents for <span className='text-blue-700'>Application ID : {formId}</span></h2>
                             <p className="text-muted-foreground">
                                 Please upload the following documents to complete your application for{' '}
                                 {applicationData.visaDetails.visaType}
@@ -617,7 +617,7 @@ export default function AttachmentsForm() {
                                                         <div className="p-4 rounded-md bg-muted">
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex items-center gap-2">
-                                                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                                                    <CheckCircle className="h-5 w-5 text-blue-500" />
                                                                     <span>File uploaded successfully</span>
                                                                 </div>
                                                             </div>
@@ -664,17 +664,17 @@ export default function AttachmentsForm() {
                                 <Alert
                                     className={
                                         uploadsComplete
-                                            ? 'bg-green-50 border-green-200'
+                                            ? 'bg-blue-50 border-blue-200'
                                             : 'bg-amber-50 border-amber-200'
                                     }
                                 >
                                     {uploadsComplete ? (
                                         <>
-                                            <CheckCircle className="h-4 w-4 text-green-500" />
-                                            <AlertTitle className="text-green-700">
+                                            <CheckCircle className="h-4 w-4 text-blue-500" />
+                                            <AlertTitle className="text-blue-700">
                                                 All documents uploaded
                                             </AlertTitle>
-                                            <AlertDescription className="text-green-600">
+                                            <AlertDescription className="text-blue-600">
                                                 You have successfully uploaded all required documents for{' '}
                                                 {selectedApplicant.name}.
                                                 {applicants.length > 1 &&

@@ -11,6 +11,7 @@ import ReviewForm from './ReviewForm';
 import AttachmentsForm from './AttachmentsForm';
 import PaymentForm from './PaymentForm';
 import ConfirmationPage from './ConfirmationPage';
+import DeclarationForm from './DeclarationForm';
 
 interface MultiStepFormProps {
   title: string;
@@ -29,13 +30,16 @@ export default function MultiStepForm({
     { id: 'personal-info', label: 'Personal Information' },
     { id: 'passport-info', label: 'Passport Information' },
     { id: 'additional-applicants', label: 'Additional Applicants' },
+    { id: 'declaration', label: 'Declaration' },
     { id: 'review', label: 'Review' },
     { id: 'attachments', label: 'Attachments' },
+    // { id: 'payment', label: 'Payment' },
+    // { id: 'confirmation', label: 'Confirmation' },
   ];
 
   return (
     <div className="container mx-auto py-10">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="mb-10">
           <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
           <p className="text-muted-foreground mt-2">{description}</p>
@@ -84,6 +88,7 @@ export default function MultiStepForm({
           {currentStep === 'additional-applicants' && (
             <AdditionalApplicantsForm />
           )}
+          {currentStep === 'declaration' && <DeclarationForm />}
           {currentStep === 'review' && <ReviewForm />}
           {currentStep === 'attachments' && <AttachmentsForm />}
           {currentStep === 'payment' && <PaymentForm />}
