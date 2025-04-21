@@ -32,9 +32,7 @@ export interface VisaDetailsResponse {
 // Arrival info interfaces
 export interface ArrivalInfoRequest {
   formId: string;
-  travellingFrom: string;
   arrivalDate: string;
-  departureDate: Date;
 }
 
 // Personal info interfaces

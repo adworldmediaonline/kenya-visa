@@ -32,7 +32,8 @@ const visaDetailsSchema = z
   .object({
     emailAddress: z.string().email('Please enter a valid email address'),
     visaType: z.string().min(1, 'Please select a visa type'),
-    visaValidity: z.string().min(1, 'Please select a visa validity')
+    visaValidity: z.string().min(1, 'Please select a visa validity'),
+    reasonForTravel: z.string().min(1, 'Please enter a reason for travel'),
   });
 
 type VisaDetailsFormValues = z.infer<typeof visaDetailsSchema>;
@@ -94,6 +95,7 @@ export default function VisaDetailsForm() {
         visaType: visaDetails.visaType || '',
         visaValidity: visaDetails.visaValidity || '',
         companyReferenceNumber: visaDetails.companyReferenceNumber || '',
+        reasonForTravel: visaDetails.reasonForTravel || '',
       });
 
       // Use setTimeout to ensure the reset happens after the form is fully initialized
@@ -101,7 +103,8 @@ export default function VisaDetailsForm() {
         form.reset({
           emailAddress: applicationData.emailAddress || '',
           visaType: visaDetails.visaType || '',
-          visaValidity: visaDetails.visaValidity || ''
+          visaValidity: visaDetails.visaValidity || '',
+          reasonForTravel: visaDetails.reasonForTravel || '',
         });
       }, 0);
     }
@@ -255,33 +258,70 @@ export default function VisaDetailsForm() {
         />
 
         {selectedVisaType && (
-          <FormField
-            control={form.control}
-            name="visaValidity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Visa Validity</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select visa validity" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {selectedVisaTypeData?.validities.map(
-                      (validity: { type: string; price: number }) => (
-                        <SelectItem key={validity.type} value={validity.type}>
-                          {validity.type} - ${validity.price}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <>
+            <FormField
+              control={form.control}
+              name="visaValidity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Visa Validity</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select visa validity" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedVisaTypeData?.validities.map(
+                        (validity: { type: string; price: number }) => (
+                          <SelectItem key={validity.type} value={validity.type}>
+                            {validity.type} - ${validity.price}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="reasonForTravel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reason for Travel</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isLoadingVisaTypes}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isLoadingVisaTypes ? 'Loading...' : 'Select reason for travel'
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedVisaTypeData?.reason.map(
+                        (reason: string) => (
+                          <SelectItem key={reason} value={reason}>
+                            {reason}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
         )}
+
 
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={mutation.isPending}>

@@ -71,6 +71,14 @@ const personalInfoSchema = z.object({
     .string()
     .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
   occupation: z.string().min(1, 'Occupation is required'),
+  // New fields based on the backend requirements
+  streetAddress: z.string().min(1, 'Street address is required'),
+  addressCity: z.string().min(1, 'City is required'),
+  addressCountry: z.string().min(1, 'Country is required'),
+  emergencyContactName: z.string().min(1, 'Emergency contact name is required'),
+  emergencyContactPhone: z
+    .string()
+    .refine(isValidPhoneNumber, { message: 'Invalid emergency contact phone number' }),
 });
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
@@ -115,6 +123,12 @@ export default function PersonalInfoForm() {
       email: '',
       phoneNumber: '',
       occupation: '',
+      // New fields
+      streetAddress: '',
+      addressCity: '',
+      addressCountry: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
     },
   });
 
@@ -162,6 +176,12 @@ export default function PersonalInfoForm() {
           email: personalInfo.email || '',
           phoneNumber: personalInfo.phoneNumber || '',
           occupation: personalInfo.occupation || '',
+          // New fields
+          streetAddress: personalInfo.streetAddress || '',
+          addressCity: personalInfo.addressCity || '',
+          addressCountry: personalInfo.addressCountry || '',
+          emergencyContactName: personalInfo.emergencyContactName || '',
+          emergencyContactPhone: personalInfo.emergencyContactPhone || '',
         });
       }, 0);
     }
@@ -456,6 +476,88 @@ export default function PersonalInfoForm() {
                 <FormLabel>Occupation</FormLabel>
                 <FormControl>
                   <Input placeholder="Occupation" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Street Address - New field */}
+          <FormField
+            control={form.control}
+            name="streetAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Street Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Street address" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* City - New field */}
+          <FormField
+            control={form.control}
+            name="addressCity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Input placeholder="City" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Country - New field */}
+          <FormField
+            control={form.control}
+            name="addressCountry"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <CountryDropdown
+                    placeholder="Select country"
+                    defaultValue={field.value}
+                    onChange={country => {
+                      field.onChange(country.name);
+                    }}
+                    name={field.name}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Emergency Contact Name - New field */}
+          <FormField
+            control={form.control}
+            name="emergencyContactName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Emergency Contact Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Emergency contact name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Emergency Contact Phone - New field */}
+          <FormField
+            control={form.control}
+            name="emergencyContactPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Emergency Contact Phone</FormLabel>
+                <FormControl>
+                  <PhoneInput placeholder="Emergency contact phone" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
