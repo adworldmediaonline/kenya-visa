@@ -119,8 +119,8 @@ export default function StatusPage() {
 
     return (
         <MainLayout
-            title="Check Application Status - Ethiopia e-Visa Portal"
-            description="Track the status of your Ethiopia e-Visa application online."
+            title="Check Application Status - Kenya eTA Portal"
+            description="Track the status of your Kenya eTA application online."
         >
             <div className="max-w-4xl mx-auto py-12 px-4">
                 <div className="mb-8 text-center">
