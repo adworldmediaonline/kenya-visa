@@ -12,8 +12,8 @@ interface MainLayoutProps {
 
 export default function MainLayout({
     children,
-    title = 'Ethiopia Visa - Official e-Visa Application Portal',
-    description = 'Apply for your Ethiopia e-Visa online. Fast, secure, and convenient application process.'
+    title = 'Kenya Visa - Official e-Visa Application Portal',
+    description = 'Apply for your Kenya e-Visa online. Fast, secure, and convenient application process.'
 }: MainLayoutProps) {
     useEffect(() => {
         // Update document title on the client side

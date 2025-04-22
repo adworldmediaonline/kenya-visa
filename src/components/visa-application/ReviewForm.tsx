@@ -33,6 +33,7 @@ type FormStep =
   | 'additional-applicants'
   | 'passport-info'
   | 'additional-applicants'
+  | 'declaration'
   | 'review'
   | 'attachments';
 
@@ -41,7 +42,8 @@ type SectionKey =
   | 'arrivalInfo'
   | 'personalInfo'
   | 'passportInfo'
-  | 'additionalApplicants';
+  | 'additionalApplicants'
+  | 'declaration';
 
 // Use a record type instead of any
 type ApplicationData = Record<string, Record<string, unknown>>;
@@ -63,6 +65,7 @@ export default function ReviewForm() {
     personalInfo: false,
     passportInfo: false,
     additionalApplicants: false,
+    declaration: false,
   });
 
   // Fetch the application data
@@ -112,13 +115,14 @@ export default function ReviewForm() {
       personalInfo: 'personal-info',
       passportInfo: 'passport-info',
       additionalApplicants: 'additional-applicants',
+      declaration: 'declaration',
     };
 
     const step = stepMapping[section];
 
     if (isCompleted[step]) {
       return (
-        <Badge className="ml-auto flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-100">
+        <Badge className="ml-auto flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-100">
           <CheckCircle className="h-3 w-3" />
           Complete
         </Badge>
@@ -157,7 +161,7 @@ export default function ReviewForm() {
     );
   }
 
-  const { emailAddress, visaDetails, arrivalInfo, personalInfo, passportInfo } =
+  const { emailAddress, visaDetails, arrivalInfo, personalInfo, passportInfo, declaration } =
     applicationData;
 
   return (
@@ -211,14 +215,6 @@ export default function ReviewForm() {
                     {safeDisplay(visaDetails.visaValidity)}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Company Reference
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(visaDetails.companyReferenceNumber)}
-                  </dd>
-                </div>
               </dl>
             </CardContent>
             <CardFooter>
@@ -257,6 +253,14 @@ export default function ReviewForm() {
               <dl className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4">
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
+                    Travelling From
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(arrivalInfo.travellingFrom)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
                     Arrival Date
                   </dt>
                   <dd className="mt-1 text-sm">
@@ -265,72 +269,10 @@ export default function ReviewForm() {
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
-                    Departure Country
+                    Departure Date
                   </dt>
                   <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.departureCountry)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Departure City
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.departureCity)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Airline</dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.airline)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Flight Number
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.flightNumber)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Accommodation Type
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.accommodationType)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Accommodation Name
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.accommodationName)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Accommodation City
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.accommodationCity)}
-                  </dd>
-                </div>
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">
-                    Accommodation Address
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.accommodationStreetAddress)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Accommodation Phone
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.accommodationTelephone)}
+                    {formatDate(safeDisplay(arrivalInfo.departureDate))}
                   </dd>
                 </div>
               </dl>
@@ -398,6 +340,12 @@ export default function ReviewForm() {
                   </dd>
                 </div>
                 <div>
+                  <dt className="text-sm font-medium text-gray-500">Marital Status</dt>
+                  <dd className="mt-1 text-sm capitalize">
+                    {safeDisplay(personalInfo.maritalStatus)}
+                  </dd>
+                </div>
+                <div>
                   <dt className="text-sm font-medium text-gray-500">
                     Citizenship
                   </dt>
@@ -441,26 +389,6 @@ export default function ReviewForm() {
                   </dt>
                   <dd className="mt-1 text-sm">
                     {safeDisplay(personalInfo.occupation)}
-                  </dd>
-                </div>
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">
-                    Street Address
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(personalInfo.streetAddress)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">City</dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(personalInfo.addressCity)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Country</dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(personalInfo.addressCountry)}
                   </dd>
                 </div>
               </dl>
@@ -537,14 +465,6 @@ export default function ReviewForm() {
                   </dt>
                   <dd className="mt-1 text-sm">
                     {safeDisplay(passportInfo.passportIssuingCountry)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Issuing Authority
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(passportInfo.passportIssuingAuthority)}
                   </dd>
                 </div>
               </dl>
@@ -662,11 +582,172 @@ export default function ReviewForm() {
         </Card>
       )}
 
+      {/* Declaration Section */}
+      <Card>
+        <CardHeader
+          className="pb-3 cursor-pointer"
+          onClick={() => toggleSection('declaration')}
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <CardTitle>Declaration</CardTitle>
+              {renderSectionStatus('declaration')}
+            </div>
+            <Button variant="ghost" size="icon">
+              {expandedSections.declaration ? <ChevronUp /> : <ChevronDown />}
+            </Button>
+          </div>
+        </CardHeader>
+        {expandedSections.declaration && declaration && (
+          <>
+            <CardContent className="pb-3">
+              <dl className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4">
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Visited Egypt Before
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {typeof declaration.visitedBefore === 'boolean'
+                      ? (declaration.visitedBefore ? 'Yes' : 'No')
+                      : 'Not provided'}
+                  </dd>
+                </div>
+
+                {declaration?.visitedBefore === true && (
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Previous Visit From
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {formatDate(safeDisplay(declaration?.dateFrom || ''))}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Previous Visit To
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {formatDate(safeDisplay(declaration?.dateTo || ''))}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Where Stayed
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(declaration?.whereStayed)}
+                      </dd>
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Deported From Egypt or Other Country
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {typeof declaration.deportedFromEgyptOrOtherCountry === 'boolean'
+                      ? (declaration.deportedFromEgyptOrOtherCountry ? 'Yes' : 'No')
+                      : 'Not provided'}
+                  </dd>
+                </div>
+
+                {declaration?.deportedFromEgyptOrOtherCountry === true && (
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Deportation From Date
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {formatDate(safeDisplay(declaration?.deportedDateFrom || ''))}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Deportation To Date
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {formatDate(safeDisplay(declaration?.deportedDateTo || ''))}
+                      </dd>
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Who Is Paying
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(declaration?.whoIsPaying)}
+                  </dd>
+                </div>
+
+                {declaration?.whoIsPaying === 'By a sponsor (host, company, organization)' && (
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Host Type
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(declaration?.hostType)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Host Name
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(declaration?.hostName)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Host Phone Number
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(declaration?.hostPhoneNumber)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Host Email
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(declaration?.hostEmail)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Host Address
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(declaration?.hostAddress)}
+                      </dd>
+                    </div>
+                  </>
+                )}
+              </dl>
+            </CardContent>
+            <CardFooter>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit('declaration')}
+              >
+                <Edit2 className="h-4 w-4 mr-2" />
+                Edit Declaration Information
+              </Button>
+            </CardFooter>
+          </>
+        )}
+      </Card>
+
       {/* Navigation Buttons */}
       <div className="flex justify-between pt-6">
         <Button
           variant="outline"
-          onClick={() => handleEdit('additional-applicants')}
+          onClick={() => handleEdit('declaration')}
         >
           Previous
         </Button>

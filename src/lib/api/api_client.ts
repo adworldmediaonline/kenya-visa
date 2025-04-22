@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  'http://localhost:8090/api/v1/ethiopia-visa';
+  'http://localhost:8090/api/v1/kenya-visa';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

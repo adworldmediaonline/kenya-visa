@@ -58,8 +58,7 @@ const passportInfoSchema = z.object({
     .refine(date => date > new Date(), {
       message: 'Passport must not be expired',
     }),
-  passportIssuingCountry: z.string().min(1, 'Issuing country is required'),
-  passportIssuingAuthority: z.string().min(1, 'Issuing authority is required'),
+  passportIssuingCountry: z.string().min(1, 'Issuing country is required')
 });
 
 type PassportInfoFormValues = z.infer<typeof passportInfoSchema>;
@@ -97,8 +96,7 @@ export default function PassportInfoForm() {
       passportNumber: '',
       passportIssueDate: undefined,
       passportExpiryDate: undefined,
-      passportIssuingCountry: '',
-      passportIssuingAuthority: '',
+      passportIssuingCountry: ''
     },
   });
 
@@ -141,8 +139,7 @@ export default function PassportInfoForm() {
           passportExpiryDate: passportInfo.passportExpiryDate
             ? new Date(passportInfo.passportExpiryDate)
             : undefined,
-          passportIssuingCountry: passportInfo.passportIssuingCountry || '',
-          passportIssuingAuthority: passportInfo.passportIssuingAuthority || '',
+          passportIssuingCountry: passportInfo.passportIssuingCountry || ''
         });
       }, 0);
     }
@@ -364,24 +361,6 @@ export default function PassportInfoForm() {
               </FormItem>
             )}
           />
-
-          {/* Passport Issuing Authority */}
-          <FormField
-            control={form.control}
-            name="passportIssuingAuthority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Issuing Authority</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Authority that issued passport (e.g., Ministry of Foreign Affairs)"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
         <div className="flex justify-between pt-6">
@@ -396,8 +375,8 @@ export default function PassportInfoForm() {
             {mutation.isPending
               ? 'Submitting...'
               : isUpdate
-              ? 'Update & Continue'
-              : 'Next'}
+                ? 'Update & Continue'
+                : 'Next'}
           </Button>
         </div>
       </form>

@@ -14,12 +14,12 @@ export function integrateApiDataIntoFormState(apiData: VisaApplication) {
 
     if (apiData.lastExitUrl === 'payment') {
         currentStep = 'payment';
+    } else if (apiData.lastExitUrl === 'attachments') {
+        currentStep = 'attachments';
     } else if (apiData.paymentStatus === 'paid') {
         currentStep = 'confirmation';
     } else if (apiData.applicationStatus === 'submitted') {
         currentStep = 'payment';
-    } else if (apiData.lastExitUrl === 'attachments') {
-        currentStep = 'attachments';
     } else if (apiData.lastExitUrl === 'review') {
         currentStep = 'review';
     } else if (apiData.lastExitUrl === 'additional-applicants') {
@@ -39,21 +39,13 @@ export function integrateApiDataIntoFormState(apiData: VisaApplication) {
         'visa-details': apiData.visaDetails ? {
             visaType: apiData.visaDetails.visaType,
             visaValidity: apiData.visaDetails.visaValidity,
-            companyReferenceNumber: apiData.visaDetails.companyReferenceNumber,
             visaFee: apiData.visaDetails.visaFee
         } : {},
 
         'arrival-info': apiData.arrivalInfo ? {
             arrivalDate: apiData.arrivalInfo.arrivalDate,
-            departureCountry: apiData.arrivalInfo.departureCountry,
-            departureCity: apiData.arrivalInfo.departureCity,
-            airline: apiData.arrivalInfo.airline,
-            flightNumber: apiData.arrivalInfo.flightNumber,
-            accommodationType: apiData.arrivalInfo.accommodationType,
-            accommodationName: apiData.arrivalInfo.accommodationName,
-            accommodationCity: apiData.arrivalInfo.accommodationCity,
-            accommodationStreetAddress: apiData.arrivalInfo.accommodationStreetAddress,
-            accommodationTelephone: apiData.arrivalInfo.accommodationTelephone
+            departureDate: apiData.arrivalInfo.departureDate,
+            travellingFrom: apiData.arrivalInfo.travellingFrom,
         } : {},
 
         'personal-info': apiData.personalInfo ? {
@@ -67,9 +59,7 @@ export function integrateApiDataIntoFormState(apiData: VisaApplication) {
             email: apiData.personalInfo.email,
             phoneNumber: apiData.personalInfo.phoneNumber,
             occupation: apiData.personalInfo.occupation,
-            streetAddress: apiData.personalInfo.streetAddress,
-            addressCity: apiData.personalInfo.addressCity,
-            addressCountry: apiData.personalInfo.addressCountry
+            maritalStatus: apiData.personalInfo.maritalStatus,
         } : {},
 
         'passport-info': apiData.passportInfo ? {
@@ -77,8 +67,7 @@ export function integrateApiDataIntoFormState(apiData: VisaApplication) {
             passportNumber: apiData.passportInfo.passportNumber,
             passportIssueDate: apiData.passportInfo.passportIssueDate,
             passportExpiryDate: apiData.passportInfo.passportExpiryDate,
-            passportIssuingCountry: apiData.passportInfo.passportIssuingCountry,
-            passportIssuingAuthority: apiData.passportInfo.passportIssuingAuthority
+            passportIssuingCountry: apiData.passportInfo.passportIssuingCountry
         } : {},
 
         'additional-applicants': {
@@ -111,6 +100,7 @@ export function integrateApiDataIntoFormState(apiData: VisaApplication) {
         'personal-info': !!apiData.personalInfo,
         'passport-info': !!apiData.passportInfo,
         'additional-applicants': !!apiData.additionalApplicants,
+        'declaration': !!apiData.declaration,
         'review': apiData.applicationStatus === 'submitted',
         'attachments': apiData.documents && apiData.documents.isComplete,
         'payment': apiData.paymentStatus === 'completed',
@@ -131,11 +121,11 @@ export function initializeFormProviderWithApiData(apiData: VisaApplication) {
     const { formId, emailAddress, currentStep, formData, isCompleted } = integrateApiDataIntoFormState(apiData);
 
     // Also save to localStorage for persistence
-    localStorage.setItem('ethiopiaFormId', formId);
-    localStorage.setItem('ethiopiaEmailAddress', emailAddress);
-    localStorage.setItem('ethiopiaFormData', JSON.stringify(formData));
-    localStorage.setItem('ethiopiaStepCompletion', JSON.stringify(isCompleted));
-    localStorage.setItem('ethiopiaCurrentStep', currentStep);
+    localStorage.setItem('kenyaFormId', formId);
+    localStorage.setItem('kenyaEmailAddress', emailAddress);
+    localStorage.setItem('kenyaFormData', JSON.stringify(formData));
+    localStorage.setItem('kenyaStepCompletion', JSON.stringify(isCompleted));
+    localStorage.setItem('kenyaCurrentStep', currentStep);
 
     console.log('Form state initialized from API data:', {
         formId,

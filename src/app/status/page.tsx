@@ -51,7 +51,7 @@ export default function StatusPage() {
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'APPROVED':
-                return <CheckCircle className="h-5 w-5 text-green-600" />;
+                return <CheckCircle className="h-5 w-5 text-blue-600" />;
             case 'REJECTED':
                 return <XCircle className="h-5 w-5 text-red-600" />;
             default:
@@ -62,7 +62,7 @@ export default function StatusPage() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'APPROVED':
-                return "bg-green-100 text-green-800 hover:bg-green-100";
+                return "bg-blue-100 text-blue-800 hover:bg-blue-100";
             case 'REJECTED':
                 return "bg-red-100 text-red-800 hover:bg-red-100";
             default:
@@ -124,7 +124,7 @@ export default function StatusPage() {
         >
             <div className="max-w-4xl mx-auto py-12 px-4">
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-bold text-green-800">Check Application Status</h1>
+                    <h1 className="text-3xl font-bold text-blue-800">Check Application Status</h1>
                     <p className="text-gray-600 mt-2">Enter your application details to track your e-Visa status</p>
                 </div>
 
@@ -162,7 +162,7 @@ export default function StatusPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-green-600 hover:bg-green-700"
+                                className="w-full bg-blue-600 hover:bg-blue-700"
                                 disabled={isPending || isLoadingApplication}
                             >
                                 {isPending || isLoadingApplication ? (
@@ -249,7 +249,7 @@ export default function StatusPage() {
                                         <h3 className="text-sm font-medium text-gray-500 mb-2">Continue Your Application</h3>
                                         <Button
                                             onClick={handleContinue}
-                                            className="w-full bg-green-600 hover:bg-green-700"
+                                            className="w-full bg-blue-600 hover:bg-blue-700"
                                         >
                                             {getButtonText()}
                                             <ArrowRight className="ml-2 h-4 w-4" />
@@ -273,7 +273,7 @@ export default function StatusPage() {
                         <CardContent>
                             <Button
                                 onClick={handleContinue}
-                                className="w-full bg-green-600 hover:bg-green-700"
+                                className="w-full bg-blue-600 hover:bg-blue-700"
                             >
                                 {getButtonText()}
                                 <ArrowRight className="ml-2 h-4 w-4" />

@@ -32,9 +32,9 @@ export default function Header() {
                         <Link href="/">
                             <div className="flex items-center ml-2 md:ml-0">
                                 <div className="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center mr-2">
-                                    <span className="text-white font-bold">ET</span>
+                                    <span className="text-white font-bold">KE</span>
                                 </div>
-                                <span className="font-bold text-xl text-green-800">Ethiopia eVisa</span>
+                                <span className="font-bold text-xl text-green-800">Kenya eTA</span>
                             </div>
                         </Link>
                     </div>

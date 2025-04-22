@@ -11,7 +11,7 @@ export default function EligibleCountries() {
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-4">Eligible Countries</h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Citizens from the following countries can apply for an Ethiopia e-Visa online
+                        Citizens from the following countries can apply for an Kenya eTA online
                     </p>
                 </div>
 

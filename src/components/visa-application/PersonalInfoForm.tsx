@@ -43,6 +43,9 @@ import { PhoneInput } from '../ui/phone-input';
 // Define gender options
 const genderOptions = ['Male', 'Female', 'Other'];
 
+// Define marital status options
+const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
+
 // Define the form schema with Zod
 const personalInfoSchema = z.object({
   givenName: z.string().min(1, 'First name is required'),
@@ -51,6 +54,7 @@ const personalInfoSchema = z.object({
     required_error: 'Date of birth is required',
   }),
   gender: z.string().min(1, 'Gender is required'),
+  maritalStatus: z.string().min(1, 'Marital status is required'),
   citizenship: z
     .string({
       required_error: 'Please select a citizenship',
@@ -67,13 +71,14 @@ const personalInfoSchema = z.object({
     .string()
     .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
   occupation: z.string().min(1, 'Occupation is required'),
+  // New fields based on the backend requirements
   streetAddress: z.string().min(1, 'Street address is required'),
   addressCity: z.string().min(1, 'City is required'),
-  addressCountry: z
-    .string({
-      required_error: 'Please select a address country',
-    })
-    .min(1, 'Please select a address country'),
+  addressCountry: z.string().min(1, 'Country is required'),
+  emergencyContactName: z.string().min(1, 'Emergency contact name is required'),
+  emergencyContactPhone: z
+    .string()
+    .refine(isValidPhoneNumber, { message: 'Invalid emergency contact phone number' }),
 });
 
 type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
@@ -111,15 +116,19 @@ export default function PersonalInfoForm() {
       surname: '',
       dateOfBirth: undefined,
       gender: '',
+      maritalStatus: '',
       citizenship: '',
       countryOfBirth: '',
       placeOfBirth: '',
       email: '',
       phoneNumber: '',
       occupation: '',
+      // New fields
       streetAddress: '',
       addressCity: '',
       addressCountry: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
     },
   });
 
@@ -160,15 +169,19 @@ export default function PersonalInfoForm() {
             ? new Date(personalInfo.dateOfBirth)
             : undefined,
           gender: personalInfo.gender || '',
+          maritalStatus: personalInfo.maritalStatus || '',
           citizenship: personalInfo.citizenship || '',
           countryOfBirth: personalInfo.countryOfBirth || '',
           placeOfBirth: personalInfo.placeOfBirth || '',
           email: personalInfo.email || '',
           phoneNumber: personalInfo.phoneNumber || '',
           occupation: personalInfo.occupation || '',
+          // New fields
           streetAddress: personalInfo.streetAddress || '',
           addressCity: personalInfo.addressCity || '',
           addressCountry: personalInfo.addressCountry || '',
+          emergencyContactName: personalInfo.emergencyContactName || '',
+          emergencyContactPhone: personalInfo.emergencyContactPhone || '',
         });
       }, 0);
     }
@@ -339,6 +352,32 @@ export default function PersonalInfoForm() {
             )}
           />
 
+          {/* Marital Status */}
+          <FormField
+            control={form.control}
+            name="maritalStatus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Marital Status</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select marital status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {maritalStatusOptions.map(option => (
+                      <SelectItem key={option} value={option.toLowerCase()}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Citizenship (Nationality) */}
           <FormField
             control={form.control}
@@ -413,6 +452,21 @@ export default function PersonalInfoForm() {
             )}
           />
 
+          {/* Phone Number */}
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <PhoneInput placeholder="Enter a phone number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Occupation */}
           <FormField
             control={form.control}
@@ -428,28 +482,12 @@ export default function PersonalInfoForm() {
             )}
           />
 
-          {/* Phone Number */}
-          <FormField
-            control={form.control}
-            name="phoneNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  {/* <Input placeholder="Phone number" {...field} /> */}
-                  <PhoneInput placeholder="Enter a phone number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Street Address */}
+          {/* Street Address - New field */}
           <FormField
             control={form.control}
             name="streetAddress"
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem>
                 <FormLabel>Street Address</FormLabel>
                 <FormControl>
                   <Input placeholder="Street address" {...field} />
@@ -459,7 +497,7 @@ export default function PersonalInfoForm() {
             )}
           />
 
-          {/* Address City */}
+          {/* City - New field */}
           <FormField
             control={form.control}
             name="addressCity"
@@ -474,7 +512,7 @@ export default function PersonalInfoForm() {
             )}
           />
 
-          {/* Address Country */}
+          {/* Country - New field */}
           <FormField
             control={form.control}
             name="addressCountry"
@@ -482,15 +520,44 @@ export default function PersonalInfoForm() {
               <FormItem>
                 <FormLabel>Country</FormLabel>
                 <FormControl>
-                  {/* <Input placeholder="Country" {...field} /> */}
                   <CountryDropdown
-                    placeholder="Select address country"
+                    placeholder="Select country"
                     defaultValue={field.value}
                     onChange={country => {
                       field.onChange(country.name);
                     }}
                     name={field.name}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Emergency Contact Name - New field */}
+          <FormField
+            control={form.control}
+            name="emergencyContactName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Emergency Contact Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Emergency contact name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Emergency Contact Phone - New field */}
+          <FormField
+            control={form.control}
+            name="emergencyContactPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Emergency Contact Phone</FormLabel>
+                <FormControl>
+                  <PhoneInput placeholder="Emergency contact phone" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -510,8 +577,8 @@ export default function PersonalInfoForm() {
             {mutation.isPending
               ? 'Submitting...'
               : isUpdate
-              ? 'Update & Continue'
-              : 'Next'}
+                ? 'Update & Continue'
+                : 'Next'}
           </Button>
         </div>
       </form>

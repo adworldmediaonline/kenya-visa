@@ -16,64 +16,133 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import {
+  CalendarIcon,
+  Loader2,
+  Plane,
+  Ship,
+  Car
+} from 'lucide-react';
 import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
-
-// phone input
-import { isValidPhoneNumber } from 'react-phone-number-input';
-import { PhoneInput } from '../ui/phone-input';
 
 // country dropdown
 import { CountryDropdown } from '@/components/ui/country-dropdown';
 
-// Define accommodation types
-const accommodationTypes = [
-  'Hotel',
-  'Hostel',
-  'Airbnb',
-  'Family/Friend',
-  'Business Accommodation',
-  'Other',
-];
-
 // Define the form schema with Zod
 const arrivalInfoSchema = z.object({
+  // Arrival fields
   arrivalDate: z.date({
     required_error: 'Please select an arrival date',
   }),
-  departureCountry: z
-    .string({
-      required_error: 'Please select a country',
-    })
-    .min(1, 'Please select a departure country'),
-  departureCity: z.string().min(1, 'Please enter departure city'),
-  airline: z.string().optional(),
-  flightNumber: z.string().optional(),
-  accommodationType: z.string().min(1, 'Please select accommodation type'),
-  accommodationName: z.string().min(1, 'Please enter accommodation name'),
-  accommodationCity: z.string().min(1, 'Please enter accommodation city'),
-  accommodationStreetAddress: z
-    .string()
-    .min(1, 'Please enter accommodation address'),
-  accommodationTelephone: z
-    .string()
-    .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
+  arrivingBy: z.enum(['By Air', 'By Sea', 'By Land'], {
+    required_error: 'Please select how you are arriving',
+  }),
+  // Air arrival fields
+  arrivalAirline: z.string().optional(),
+  arrivalFlightNumber: z.string().optional(),
+  arrivalAirPort: z.string().optional(),
+  originCountry: z.string().optional(),
+  // Sea arrival fields
+  arrivalVesselName: z.string().optional(),
+  arrivalSeaPort: z.string().optional(),
+  // Land arrival fields
+  landBorderCrossing: z.string().optional(),
+
+  // Departure fields
+  departureBy: z.enum(['By Air', 'By Sea', 'By Land'], {
+    required_error: 'Please select how you are departing',
+  }),
+  // Air departure fields
+  departureAirline: z.string().optional(),
+  departureFlightNumber: z.string().optional(),
+  departureAirPort: z.string().optional(),
+  destinationCountry: z.string().optional(),
+  // Sea departure fields
+  departureVesselName: z.string().optional(),
+  departureSeaPort: z.string().optional(),
+  // Land departure fields
+  departureLandBorderCrossing: z.string().optional(),
+
+  // Accommodation fields
+  accommodationName: z.string({
+    required_error: 'Please enter accommodation name',
+  }).min(1, 'Accommodation name is required'),
+  accommodationFromDate: z.date({
+    required_error: 'Please select accommodation start date',
+  }),
+  accommodationToDate: z.date({
+    required_error: 'Please select accommodation end date',
+  }),
+}).refine(data => {
+  // Validate air arrival fields
+  if (data.arrivingBy === 'By Air') {
+    return !!data.arrivalAirline && !!data.arrivalFlightNumber && !!data.arrivalAirPort && !!data.originCountry;
+  }
+  return true;
+}, {
+  message: "Missing required air arrival fields",
+  path: ["arrivalAirline"],
+}).refine(data => {
+  // Validate sea arrival fields
+  if (data.arrivingBy === 'By Sea') {
+    return !!data.arrivalVesselName && !!data.arrivalSeaPort;
+  }
+  return true;
+}, {
+  message: "Missing required sea arrival fields",
+  path: ["arrivalVesselName"],
+}).refine(data => {
+  // Validate land arrival fields
+  if (data.arrivingBy === 'By Land') {
+    return !!data.landBorderCrossing;
+  }
+  return true;
+}, {
+  message: "Missing required land arrival fields",
+  path: ["landBorderCrossing"],
+}).refine(data => {
+  // Validate air departure fields
+  if (data.departureBy === 'By Air') {
+    return !!data.departureAirline && !!data.departureFlightNumber && !!data.departureAirPort && !!data.destinationCountry;
+  }
+  return true;
+}, {
+  message: "Missing required air departure fields",
+  path: ["departureAirline"],
+}).refine(data => {
+  // Validate sea departure fields
+  if (data.departureBy === 'By Sea') {
+    return !!data.departureVesselName && !!data.departureSeaPort;
+  }
+  return true;
+}, {
+  message: "Missing required sea departure fields",
+  path: ["departureVesselName"],
+}).refine(data => {
+  // Validate land departure fields
+  if (data.departureBy === 'By Land') {
+    return !!data.departureLandBorderCrossing;
+  }
+  return true;
+}, {
+  message: "Missing required land departure fields",
+  path: ["departureLandBorderCrossing"],
+}).refine(data => {
+  // Validate accommodation dates
+  return data.accommodationToDate > data.accommodationFromDate;
+}, {
+  message: "Accommodation end date must be after start date",
+  path: ["accommodationToDate"],
 });
 
 type ArrivalInfoFormValues = z.infer<typeof arrivalInfoSchema>;
@@ -99,17 +168,17 @@ export default function ArrivalInfoForm() {
     resolver: zodResolver(arrivalInfoSchema),
     defaultValues: {
       arrivalDate: new Date(),
-      departureCountry: '',
-      departureCity: '',
-      airline: '',
-      flightNumber: '',
-      accommodationType: '',
+      arrivingBy: 'By Air',
+      departureBy: 'By Air',
       accommodationName: '',
-      accommodationCity: '',
-      accommodationStreetAddress: '',
-      accommodationTelephone: '',
+      accommodationFromDate: new Date(),
+      accommodationToDate: new Date(new Date().setDate(new Date().getDate() + 7)),
     },
   });
+
+  // Watch form values to conditionally render fields
+  const arrivingBy = form.watch('arrivingBy');
+  const departureBy = form.watch('departureBy');
 
   // Determine if this is an update operation
   const isUpdate = !!formId && completedSteps.includes('arrival-info');
@@ -140,19 +209,26 @@ export default function ArrivalInfoForm() {
       // Use setTimeout to ensure the reset happens after the form is fully initialized
       setTimeout(() => {
         form.reset({
-          arrivalDate: arrivalInfo.arrivalDate
-            ? new Date(arrivalInfo.arrivalDate)
-            : new Date(),
-          departureCountry: arrivalInfo.departureCountry || '',
-          departureCity: arrivalInfo.departureCity || '',
-          airline: arrivalInfo.airline || '',
-          flightNumber: arrivalInfo.flightNumber || '',
-          accommodationType: arrivalInfo.accommodationType || '',
+          arrivalDate: arrivalInfo.arrivalDate ? new Date(arrivalInfo.arrivalDate) : new Date(),
+          arrivingBy: arrivalInfo.arrivingBy || 'By Air',
+          arrivalAirline: arrivalInfo.arrivalAirline || '',
+          arrivalFlightNumber: arrivalInfo.arrivalFlightNumber || '',
+          arrivalAirPort: arrivalInfo.arrivalAirPort || '',
+          originCountry: arrivalInfo.originCountry || '',
+          arrivalVesselName: arrivalInfo.arrivalVesselName || '',
+          arrivalSeaPort: arrivalInfo.arrivalSeaPort || '',
+          landBorderCrossing: arrivalInfo.landBorderCrossing || '',
+          departureBy: arrivalInfo.departureBy || 'By Air',
+          departureAirline: arrivalInfo.departureAirline || '',
+          departureFlightNumber: arrivalInfo.departureFlightNumber || '',
+          departureAirPort: arrivalInfo.departureAirPort || '',
+          destinationCountry: arrivalInfo.destinationCountry || '',
+          departureVesselName: arrivalInfo.departureVesselName || '',
+          departureSeaPort: arrivalInfo.departureSeaPort || '',
+          departureLandBorderCrossing: arrivalInfo.departureLandBorderCrossing || '',
           accommodationName: arrivalInfo.accommodationName || '',
-          accommodationCity: arrivalInfo.accommodationCity || '',
-          accommodationStreetAddress:
-            arrivalInfo.accommodationStreetAddress || '',
-          accommodationTelephone: arrivalInfo.accommodationTelephone || '',
+          accommodationFromDate: arrivalInfo.accommodationFromDate ? new Date(arrivalInfo.accommodationFromDate) : new Date(),
+          accommodationToDate: arrivalInfo.accommodationToDate ? new Date(arrivalInfo.accommodationToDate) : new Date(new Date().setDate(new Date().getDate() + 7)),
         });
       }, 0);
     }
@@ -167,11 +243,13 @@ export default function ArrivalInfoForm() {
 
       console.log('ArrivalInfoForm - Submitting with formId:', formId);
 
-      // Convert the date to ISO string for the API
+      // Convert the dates to ISO string for the API
       const formattedValues = {
         ...values,
         formId: formId,
         arrivalDate: values.arrivalDate.toISOString(),
+        accommodationFromDate: values.accommodationFromDate.toISOString(),
+        accommodationToDate: values.accommodationToDate.toISOString(),
       };
 
       if (isUpdate) {
@@ -228,205 +306,489 @@ export default function ArrivalInfoForm() {
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">Arrival Information</h2>
           <p className="text-muted-foreground">
-            Please provide details about your arrival in Ethiopia
+            Please provide details about your travel to Kenya
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Arrival Section */}
+        <div className="space-y-6 border p-4 rounded-lg">
+          <h3 className="text-xl font-medium">Arrival Details</h3>
+
           {/* Arrival Date */}
-          <FormField
-            control={form.control}
-            name="arrivalDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Arrival Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, 'PPP')
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={date => date < new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="arrivalDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Arrival Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={date => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-          {/* Departure Country */}
+          {/* Arriving By */}
           <FormField
             control={form.control}
-            name="departureCountry"
+            name="arrivingBy"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Departure Country</FormLabel>
+              <FormItem className="space-y-3">
+                <FormLabel>Arriving By</FormLabel>
                 <FormControl>
-                  <CountryDropdown
-                    placeholder="Select departure country"
+                  <RadioGroup
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
-                    onChange={country => {
-                      field.onChange(country.name);
-                    }}
-                    name={field.name}
-                  />
+                    className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
+                  >
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="By Air" />
+                      </FormControl>
+                      <FormLabel className="font-normal flex items-center">
+                        <Plane className="mr-2 h-4 w-4" />
+                        By Air
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="By Sea" />
+                      </FormControl>
+                      <FormLabel className="font-normal flex items-center">
+                        <Ship className="mr-2 h-4 w-4" />
+                        By Sea
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="By Land" />
+                      </FormControl>
+                      <FormLabel className="font-normal flex items-center">
+                        <Car className="mr-2 h-4 w-4" />
+                        By Land
+                      </FormLabel>
+                    </FormItem>
+                  </RadioGroup>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Departure City */}
+          {/* Conditional fields based on arrival method */}
+          {arrivingBy === 'By Air' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="arrivalAirline"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Airline</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter airline name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="arrivalFlightNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Flight Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter flight number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="arrivalAirPort"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Arrival Airport</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter arrival airport" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="originCountry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Origin Country</FormLabel>
+                    <FormControl>
+                      <CountryDropdown
+                        placeholder="Select origin country"
+                        defaultValue={field.value}
+                        onChange={country => {
+                          field.onChange(country.name);
+                        }}
+                        name={field.name}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {arrivingBy === 'By Sea' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="arrivalVesselName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vessel Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter vessel name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="arrivalSeaPort"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sea Port</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter sea port" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {arrivingBy === 'By Land' && (
+            <div className="grid grid-cols-1 gap-6">
+              <FormField
+                control={form.control}
+                name="landBorderCrossing"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Border Crossing Point</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter border crossing point" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Departure Section */}
+        <div className="space-y-6 border p-4 rounded-lg">
+          <h3 className="text-xl font-medium">Departure Details</h3>
+
+          {/* Departing By */}
           <FormField
             control={form.control}
-            name="departureCity"
+            name="departureBy"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Departure City</FormLabel>
+              <FormItem className="space-y-3">
+                <FormLabel>Departing By</FormLabel>
                 <FormControl>
-                  <Input placeholder="City" {...field} />
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
+                  >
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="By Air" />
+                      </FormControl>
+                      <FormLabel className="font-normal flex items-center">
+                        <Plane className="mr-2 h-4 w-4" />
+                        By Air
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="By Sea" />
+                      </FormControl>
+                      <FormLabel className="font-normal flex items-center">
+                        <Ship className="mr-2 h-4 w-4" />
+                        By Sea
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="By Land" />
+                      </FormControl>
+                      <FormLabel className="font-normal flex items-center">
+                        <Car className="mr-2 h-4 w-4" />
+                        By Land
+                      </FormLabel>
+                    </FormItem>
+                  </RadioGroup>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Airline (Optional) */}
-          <FormField
-            control={form.control}
-            name="airline"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Airline (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Airline name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Conditional fields based on departure method */}
+          {departureBy === 'By Air' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="departureAirline"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Airline</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter airline name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="departureFlightNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Flight Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter flight number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="departureAirPort"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Departure Airport</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter departure airport" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="destinationCountry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Destination Country</FormLabel>
+                    <FormControl>
+                      <CountryDropdown
+                        placeholder="Select destination country"
+                        defaultValue={field.value}
+                        onChange={country => {
+                          field.onChange(country.name);
+                        }}
+                        name={field.name}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
-          {/* Flight Number (Optional) */}
-          <FormField
-            control={form.control}
-            name="flightNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Flight Number (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Flight number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {departureBy === 'By Sea' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="departureVesselName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vessel Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter vessel name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="departureSeaPort"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sea Port</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter sea port" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
-          {/* Accommodation Type */}
-          <FormField
-            control={form.control}
-            name="accommodationType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+          {departureBy === 'By Land' && (
+            <div className="grid grid-cols-1 gap-6">
+              <FormField
+                control={form.control}
+                name="departureLandBorderCrossing"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Border Crossing Point</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter border crossing point" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Accommodation Section */}
+        <div className="space-y-6 border p-4 rounded-lg">
+          <h3 className="text-xl font-medium">Accommodation Details</h3>
+
+          <div className="grid grid-cols-1 gap-6">
+            <FormField
+              control={form.control}
+              name="accommodationName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Accommodation Name</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select accommodation type" />
-                    </SelectTrigger>
+                    <Input
+                      placeholder="Enter hotel or accommodation name"
+                      {...field}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {accommodationTypes.map(type => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-          {/* Accommodation Name */}
-          <FormField
-            control={form.control}
-            name="accommodationName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Hotel/hostel/place name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="accommodationFromDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>From Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={date => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* Accommodation City */}
-          <FormField
-            control={form.control}
-            name="accommodationCity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation City</FormLabel>
-                <FormControl>
-                  <Input placeholder="City" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Accommodation Street Address */}
-          <FormField
-            control={form.control}
-            name="accommodationStreetAddress"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="Street address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Accommodation Telephone */}
-          <FormField
-            control={form.control}
-            name="accommodationTelephone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Accommodation Telephone</FormLabel>
-                <FormControl>
-                  {/* <Input placeholder="Telephone number" {...field} /> */}
-                  <PhoneInput placeholder="Enter a phone number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="accommodationToDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>To Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={date => date < form.getValues().accommodationFromDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         <div className="flex justify-between pt-6">
@@ -441,8 +803,8 @@ export default function ArrivalInfoForm() {
             {mutation.isPending
               ? 'Submitting...'
               : isUpdate
-              ? 'Update & Continue'
-              : 'Next'}
+                ? 'Update & Continue'
+                : 'Next'}
           </Button>
         </div>
       </form>

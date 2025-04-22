@@ -7,20 +7,20 @@ export default function Footer() {
             <div className="container mx-auto px-4 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                     <div>
-                        <h3 className="text-lg font-semibold mb-4 text-white">Ethiopia e-Visa</h3>
-                        <p className="mb-4">The official portal for applying for an electronic visa to visit Ethiopia.</p>
+                        <h3 className="text-lg font-semibold mb-4 text-white">Kenya e-Visa</h3>
+                        <p className="mb-4">The official portal for applying for an electronic visa to visit Kenya.</p>
                         <div className="flex items-center">
                             <div className="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center mr-2">
-                                <span className="text-white font-bold">ET</span>
+                                <span className="text-white font-bold">KE</span>
                             </div>
-                            <span className="font-bold text-white">Ethiopia eVisa</span>
+                            <span className="font-bold text-white">Kenya eVisa</span>
                         </div>
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold mb-4 text-white">Quick Links</h3>
                         <ul className="space-y-2">
                             <li><Link href="/" className="hover:text-green-400">Home</Link></li>
-                            <li><Link href="/" className="hover:text-green-400">About Ethiopia</Link></li>
+                            <li><Link href="/" className="hover:text-green-400">About Kenya</Link></li>
                             <li><Link href="/" className="hover:text-green-400">Visa Types</Link></li>
                             <li><Link href="/" className="hover:text-green-400">FAQ</Link></li>
                         </ul>
@@ -39,18 +39,18 @@ export default function Footer() {
                         <ul className="space-y-2">
                             <li className="flex items-start">
                                 <Phone className="h-5 w-5 mr-2 mt-0.5" />
-                                <span>+251 11 XXX XXXX</span>
+                                <span>+254 20 XXX XXXX</span>
                             </li>
                             <li className="flex items-start">
                                 <Globe className="h-5 w-5 mr-2 mt-0.5" />
-                                <span>support@ethiopiaevisa.gov.et</span>
+                                <span>support@kenyaevisa.go.ke</span>
                             </li>
                         </ul>
                     </div>
                 </div>
                 <div className="pt-8 border-t border-gray-800 text-sm text-center">
-                    <p>Copyright © {new Date().getFullYear()} Ethiopia Immigration Service | All Rights Reserved</p>
-                    <p className="mt-2">This is the official e-Visa application portal for Ethiopia</p>
+                    <p>Copyright © {new Date().getFullYear()} Kenya Immigration Service | All Rights Reserved</p>
+                    <p className="mt-2">This is the official e-Visa application portal for Kenya</p>
                 </div>
             </div>
         </footer>

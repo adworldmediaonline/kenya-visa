@@ -225,7 +225,7 @@ export default function PaymentForm() {
                 contact: applicationData?.personalInfo?.phoneNumber || '',
             },
             theme: {
-                color: '#078930', // Ethiopia green
+                color: '#078930', // Ethiopia blue
             },
             modal: {
                 ondismiss: function () {
@@ -263,7 +263,7 @@ export default function PaymentForm() {
     if (isLoadingApplication) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-ethiopia-green" />
+                <Loader2 className="h-8 w-8 animate-spin text-ethiopia-blue" />
                 <span className="ml-2 text-lg">Loading payment information...</span>
             </div>
         );
@@ -349,12 +349,12 @@ export default function PaymentForm() {
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
                     {paymentStatus === 'success' ? (
-                        <Alert className="bg-green-50 border-green-200">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            <AlertTitle className="text-green-800">
+                        <Alert className="bg-blue-50 border-blue-200">
+                            <CheckCircle className="h-4 w-4 text-blue-600" />
+                            <AlertTitle className="text-blue-800">
                                 Payment Successful
                             </AlertTitle>
-                            <AlertDescription className="text-green-700">
+                            <AlertDescription className="text-blue-700">
                                 Your payment has been processed successfully. Redirecting to
                                 confirmation page...
                             </AlertDescription>

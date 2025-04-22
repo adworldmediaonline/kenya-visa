@@ -14,7 +14,7 @@ const PaymentStatusLoading = () => (
             <div className="text-center">
                 <h1 className="text-2xl font-bold mb-4">Loading Payment Status</h1>
                 <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ethiopia-green"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ethiopia-blue"></div>
                 </div>
                 <p className="mt-4 text-gray-600">Please wait...</p>
             </div>
@@ -95,7 +95,7 @@ const PaymentStatusContent = () => {
                     <div className="text-center">
                         <h1 className="text-2xl font-bold mb-4">Processing Payment</h1>
                         <div className="flex justify-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ethiopia-green"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ethiopia-blue"></div>
                         </div>
                         <p className="mt-4 text-gray-600">Please wait while we verify your payment...</p>
                     </div>
@@ -110,7 +110,7 @@ const PaymentStatusContent = () => {
                 {paymentDetails.success ? (
                     <div className="text-center">
                         <div className="flex justify-center mb-4">
-                            <CheckCircle className="h-16 w-16 text-ethiopia-green" />
+                            <CheckCircle className="h-16 w-16 text-ethiopia-blue" />
                         </div>
                         <h1 className="text-2xl font-bold mb-2">Payment Successful!</h1>
                         <p className="text-gray-600 mb-6">
@@ -124,7 +124,7 @@ const PaymentStatusContent = () => {
                         <div className="mt-6">
                             <Link
                                 href="/status"
-                                className="inline-block px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors"
+                                className="inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
                             >
                                 Check Application Status
                             </Link>
@@ -142,13 +142,13 @@ const PaymentStatusContent = () => {
                         {/* <div className="mt-6 space-y-3">
               <Link
                 href="/visa-application"
-                className="inline-block w-full px-6 py-3 bg-ethiopia-green text-white font-medium rounded-md hover:bg-opacity-90 transition-colors"
+                className="inline-block w-full px-6 py-3 bg-ethiopia-blue text-white font-medium rounded-md hover:bg-opacity-90 transition-colors"
               >
                 Try Again
               </Link>
               <Link
                 href="/contact"
-                className="inline-block w-full px-6 py-3 border border-ethiopia-green text-ethiopia-green font-medium rounded-md hover:bg-gray-50 transition-colors"
+                className="inline-block w-full px-6 py-3 border border-ethiopia-blue text-ethiopia-blue font-medium rounded-md hover:bg-gray-50 transition-colors"
               >
                 Contact Support
               </Link>

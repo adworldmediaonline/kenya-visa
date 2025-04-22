@@ -51,6 +51,17 @@ import { cn } from '@/lib/utils';
 import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
 
+// Define marital status options
+const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
+
+// Define passport type options
+const passportTypes = [
+  'Regular/Ordinary',
+  'Diplomatic',
+  'Service/Official',
+  'Emergency',
+  'Other',
+];
 // country dropdown
 import { CountryDropdown } from '@/components/ui/country-dropdown';
 // phone input
@@ -77,26 +88,19 @@ const additionalApplicantSchema = z.object({
     required_error: 'Date of birth is required',
   }),
   placeOfBirth: z.string().min(1, 'Place of birth is required'),
+  maritalStatus: z.string().min(1, 'Marital status is required'),
   email: z.string().email('Invalid email address'),
   phoneNumber: z
     .string()
     .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
   occupation: z.string().min(1, 'Occupation is required'),
-  streetAddress: z.string().min(1, 'Street address is required'),
-  addressCity: z.string().min(1, 'City is required'),
-  addressCountry: z
-    .string({
-      required_error: 'Please select a address country',
-    })
-    .min(1, 'Please select a address country'),
 
   // Passport Info fields
   passportType: z.string().min(1, 'Passport type is required'),
   passportNumber: z.string().min(1, 'Passport number is required'),
   passportIssueDate: z.date({ required_error: 'Issue date is required' }),
   passportExpiryDate: z.date({ required_error: 'Expiry date is required' }),
-  passportIssuingCountry: z.string().min(1, 'Issuing country is required'),
-  passportIssuingAuthority: z.string().min(1, 'Issuing authority is required'),
+  passportIssuingCountry: z.string().min(1, 'Issuing country is required')
 });
 
 type AdditionalApplicantFormValues = z.infer<typeof additionalApplicantSchema>;
@@ -170,19 +174,16 @@ export default function AdditionalApplicantsForm() {
       gender: '',
       countryOfBirth: '',
       dateOfBirth: undefined,
+      maritalStatus: '',
       placeOfBirth: '',
       email: '',
       phoneNumber: '',
       occupation: '',
-      streetAddress: '',
-      addressCity: '',
-      addressCountry: '',
       passportType: 'Ordinary',
       passportNumber: '',
       passportIssueDate: undefined,
       passportExpiryDate: undefined,
-      passportIssuingCountry: '',
-      passportIssuingAuthority: '',
+      passportIssuingCountry: ''
     },
   });
 
@@ -289,7 +290,7 @@ export default function AdditionalApplicantsForm() {
     });
 
     // Move to review step
-    setCurrentStep('review');
+    setCurrentStep('declaration');
   };
 
   // Render a compact view of an applicant
@@ -543,6 +544,32 @@ export default function AdditionalApplicantsForm() {
                       )}
                     />
 
+                    {/* Marital Status */}
+                    <FormField
+                      control={form.control}
+                      name="maritalStatus"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Marital Status</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select marital status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {maritalStatusOptions.map(option => (
+                                <SelectItem key={option} value={option.toLowerCase()}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     {/* Citizenship */}
                     <FormField
                       control={form.control}
@@ -659,59 +686,6 @@ export default function AdditionalApplicantsForm() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Street Address */}
-                    <FormField
-                      control={form.control}
-                      name="streetAddress"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Street Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Street address" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* City */}
-                    <FormField
-                      control={form.control}
-                      name="addressCity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input placeholder="City" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Country */}
-                    <FormField
-                      control={form.control}
-                      name="addressCountry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Country</FormLabel>
-                          <FormControl>
-                            {/* <Input placeholder="Country" {...field} /> */}
-                            <CountryDropdown
-                              placeholder="Select address country"
-                              defaultValue={field.value}
-                              onChange={country => {
-                                field.onChange(country.name);
-                              }}
-                              name={field.name}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
                 </div>
 
@@ -736,12 +710,11 @@ export default function AdditionalApplicantsForm() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Ordinary">Ordinary</SelectItem>
-                              <SelectItem value="Diplomatic">
-                                Diplomatic
-                              </SelectItem>
-                              <SelectItem value="Service">Service</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
+                              {passportTypes.map(type => (
+                                <SelectItem key={type} value={type}>
+                                  {type}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -855,21 +828,6 @@ export default function AdditionalApplicantsForm() {
                           <FormLabel>Issuing Country</FormLabel>
                           <FormControl>
                             <Input placeholder="Country" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Issuing Authority */}
-                    <FormField
-                      control={form.control}
-                      name="passportIssuingAuthority"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Issuing Authority</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Authority" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

@@ -91,8 +91,9 @@ export default function PaymentForm() {
         mutationFn: (data: { formId: string }) => visaApi.createStripeSession(data),
         onSuccess: (data) => {
             // Redirect to Stripe checkout page
-            if (data && data.session_url) {
-                window.location.href = data.session_url;
+            console.log('Stripe session created:', data);
+            if (data?.data && data?.data?.session_url) {
+                window.location.href = data?.data?.session_url;
             } else {
                 setPaymentStatus('error');
                 setPaymentError('Failed to create payment session');
@@ -170,7 +171,7 @@ export default function PaymentForm() {
     if (isLoadingApplication) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-ethiopia-green" />
+                <Loader2 className="h-8 w-8 animate-spin text-ethiopia-blue" />
                 <span className="ml-2 text-lg">Loading payment information...</span>
             </div>
         );
@@ -294,9 +295,16 @@ export default function PaymentForm() {
             <div className="flex justify-between pt-6">
                 <Button
                     variant="outline"
+                    onClick={() => setCurrentStep('review')}
+                >
+                    Review Application
+                </Button>
+
+                <Button
+                    variant="default"
                     onClick={() => setCurrentStep('attachments')}
                 >
-                    Back to Attachments
+                    Attach Documents
                 </Button>
             </div>
         </div>
