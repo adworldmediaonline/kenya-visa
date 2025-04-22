@@ -32,10 +32,10 @@ type FormStep =
   | 'personal-info'
   | 'additional-applicants'
   | 'passport-info'
-  | 'additional-applicants'
   | 'declaration'
   | 'review'
-  | 'attachments';
+  | 'attachments'
+  | 'payment';
 
 type SectionKey =
   | 'visaDetails'
@@ -215,6 +215,14 @@ export default function ReviewForm() {
                     {safeDisplay(visaDetails.visaValidity)}
                   </dd>
                 </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Reason for Travel
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(visaDetails.reasonForTravel)}
+                  </dd>
+                </div>
               </dl>
             </CardContent>
             <CardFooter>
@@ -251,13 +259,11 @@ export default function ReviewForm() {
           <>
             <CardContent className="pb-3">
               <dl className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Travelling From
+                {/* Arrival Details */}
+                <div className="col-span-2">
+                  <dt className="text-sm font-medium text-gray-500 mb-2">
+                    Arrival Details
                   </dt>
-                  <dd className="mt-1 text-sm">
-                    {safeDisplay(arrivalInfo.travellingFrom)}
-                  </dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
@@ -269,10 +275,200 @@ export default function ReviewForm() {
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
-                    Departure Date
+                    Arriving By
                   </dt>
                   <dd className="mt-1 text-sm">
-                    {formatDate(safeDisplay(arrivalInfo.departureDate))}
+                    {safeDisplay(arrivalInfo.arrivingBy)}
+                  </dd>
+                </div>
+
+                {/* Air Arrival Details */}
+                {arrivalInfo.arrivingBy === 'By Air' && (
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Airline
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.arrivalAirline)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Flight Number
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.arrivalFlightNumber)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Arrival Airport
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.arrivalAirPort)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Origin Country
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.originCountry)}
+                      </dd>
+                    </div>
+                  </>
+                )}
+
+                {/* Sea Arrival Details */}
+                {arrivalInfo.arrivingBy === 'By Sea' && (
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Vessel Name
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.arrivalVesselName)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Sea Port
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.arrivalSeaPort)}
+                      </dd>
+                    </div>
+                  </>
+                )}
+
+                {/* Land Arrival Details */}
+                {arrivalInfo.arrivingBy === 'By Land' && (
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">
+                      Border Crossing Point
+                    </dt>
+                    <dd className="mt-1 text-sm">
+                      {safeDisplay(arrivalInfo.landBorderCrossing)}
+                    </dd>
+                  </div>
+                )}
+
+                {/* Departure Details */}
+                <div className="col-span-2 mt-4">
+                  <dt className="text-sm font-medium text-gray-500 mb-2">
+                    Departure Details
+                  </dt>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Departing By
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(arrivalInfo.departureBy)}
+                  </dd>
+                </div>
+
+                {/* Air Departure Details */}
+                {arrivalInfo.departureBy === 'By Air' && (
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Airline
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.departureAirline)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Flight Number
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.departureFlightNumber)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Departure Airport
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.departureAirPort)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Destination Country
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.destinationCountry)}
+                      </dd>
+                    </div>
+                  </>
+                )}
+
+                {/* Sea Departure Details */}
+                {arrivalInfo.departureBy === 'By Sea' && (
+                  <>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Vessel Name
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.departureVesselName)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Sea Port
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {safeDisplay(arrivalInfo.departureSeaPort)}
+                      </dd>
+                    </div>
+                  </>
+                )}
+
+                {/* Land Departure Details */}
+                {arrivalInfo.departureBy === 'By Land' && (
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">
+                      Border Crossing Point
+                    </dt>
+                    <dd className="mt-1 text-sm">
+                      {safeDisplay(arrivalInfo.departureLandBorderCrossing)}
+                    </dd>
+                  </div>
+                )}
+
+                {/* Accommodation Details */}
+                <div className="col-span-2 mt-4">
+                  <dt className="text-sm font-medium text-gray-500 mb-2">
+                    Accommodation Details
+                  </dt>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Accommodation Name
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(arrivalInfo.accommodationName)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    From Date
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {formatDate(safeDisplay(arrivalInfo.accommodationFromDate))}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    To Date
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {formatDate(safeDisplay(arrivalInfo.accommodationToDate))}
                   </dd>
                 </div>
               </dl>
@@ -389,6 +585,46 @@ export default function ReviewForm() {
                   </dt>
                   <dd className="mt-1 text-sm">
                     {safeDisplay(personalInfo.occupation)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Street Address
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(personalInfo.streetAddress)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    City
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(personalInfo.addressCity)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Country
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(personalInfo.addressCountry)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Emergency Contact Name
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(personalInfo.emergencyContactName)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Emergency Contact Phone
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {safeDisplay(personalInfo.emergencyContactPhone)}
                   </dd>
                 </div>
               </dl>
@@ -604,125 +840,83 @@ export default function ReviewForm() {
               <dl className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4">
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
-                    Visited Egypt Before
+                    Trip Financed by Third Party
                   </dt>
                   <dd className="mt-1 text-sm">
-                    {typeof declaration.visitedBefore === 'boolean'
-                      ? (declaration.visitedBefore ? 'Yes' : 'No')
+                    {typeof declaration.tripFinanced === 'boolean'
+                      ? (declaration.tripFinanced ? 'Yes' : 'No')
                       : 'Not provided'}
                   </dd>
                 </div>
 
-                {declaration?.visitedBefore === true && (
-                  <>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Previous Visit From
-                      </dt>
-                      <dd className="mt-1 text-sm">
-                        {formatDate(safeDisplay(declaration?.dateFrom || ''))}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Previous Visit To
-                      </dt>
-                      <dd className="mt-1 text-sm">
-                        {formatDate(safeDisplay(declaration?.dateTo || ''))}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Where Stayed
-                      </dt>
-                      <dd className="mt-1 text-sm">
-                        {safeDisplay(declaration?.whereStayed)}
-                      </dd>
-                    </div>
-                  </>
-                )}
-
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
-                    Deported From Egypt or Other Country
+                    Convicted of Any Offense
                   </dt>
                   <dd className="mt-1 text-sm">
-                    {typeof declaration.deportedFromEgyptOrOtherCountry === 'boolean'
-                      ? (declaration.deportedFromEgyptOrOtherCountry ? 'Yes' : 'No')
+                    {typeof declaration.convictedOfOffence === 'boolean'
+                      ? (declaration.convictedOfOffence ? 'Yes' : 'No')
                       : 'Not provided'}
                   </dd>
                 </div>
 
-                {declaration?.deportedFromEgyptOrOtherCountry === true && (
-                  <>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Deportation From Date
-                      </dt>
-                      <dd className="mt-1 text-sm">
-                        {formatDate(safeDisplay(declaration?.deportedDateFrom || ''))}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Deportation To Date
-                      </dt>
-                      <dd className="mt-1 text-sm">
-                        {formatDate(safeDisplay(declaration?.deportedDateTo || ''))}
-                      </dd>
-                    </div>
-                  </>
-                )}
-
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
-                    Who Is Paying
+                    Denied Entry to Kenya Before
                   </dt>
                   <dd className="mt-1 text-sm">
-                    {safeDisplay(declaration?.whoIsPaying)}
+                    {typeof declaration.deniedEntryToKenya === 'boolean'
+                      ? (declaration.deniedEntryToKenya ? 'Yes' : 'No')
+                      : 'Not provided'}
                   </dd>
                 </div>
 
-                {declaration?.whoIsPaying === 'By a sponsor (host, company, organization)' && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Previous Travel to Kenya
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {typeof declaration.previousTravelToKenya === 'boolean'
+                      ? (declaration.previousTravelToKenya ? 'Yes' : 'No')
+                      : 'Not provided'}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Bringing Monetary Instruments Over $10,000
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {typeof declaration.monetaryInstrument === 'boolean'
+                      ? (declaration.monetaryInstrument ? 'Yes' : 'No')
+                      : 'Not provided'}
+                  </dd>
+                </div>
+
+                {declaration.monetaryInstrument === true && (
                   <>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">
-                        Host Type
+                        Monetary Instrument Type
                       </dt>
                       <dd className="mt-1 text-sm">
-                        {safeDisplay(declaration?.hostType)}
+                        {safeDisplay(declaration.monetaryInstrumentName)}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">
-                        Host Name
+                        Currency
                       </dt>
                       <dd className="mt-1 text-sm">
-                        {safeDisplay(declaration?.hostName)}
+                        {safeDisplay(declaration.monetaryInstrumentCurrency)}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">
-                        Host Phone Number
+                        Amount
                       </dt>
                       <dd className="mt-1 text-sm">
-                        {safeDisplay(declaration?.hostPhoneNumber)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Host Email
-                      </dt>
-                      <dd className="mt-1 text-sm">
-                        {safeDisplay(declaration?.hostEmail)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Host Address
-                      </dt>
-                      <dd className="mt-1 text-sm">
-                        {safeDisplay(declaration?.hostAddress)}
+                        {safeDisplay(declaration.amount)}
                       </dd>
                     </div>
                   </>

@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -24,99 +23,58 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Loader2 } from 'lucide-react';
 import { useFormContext } from '@/providers/FormProvider';
 import { visaApi } from '@/lib/api/endpoints';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-// Define who is paying options
-const payingOptions = [
-    'By the applicant himself/herself',
-    'By a sponsor (host, company, organization)',
-];
-
-// Define host types
-const hostTypes = [
-    'Tourist Company',
-    'Hotel',
-    'Individual',
-    'Company',
-    'Organization',
+// Define currencies for select dropdown
+const currencies = [
+    'USD', 'EUR', 'GBP', 'KES', 'AUD', 'CAD', 'CHF', 'JPY', 'CNY', 'AED', 'SGD',
+    'INR', 'ZAR', 'NGN', 'EGP', 'MAD', 'TZS', 'UGX', 'RWF', 'BIF', 'ETB', 'Other'
 ];
 
 // Define the form schema with Zod
-const declarationSchema = z.object({
-    visitedBefore: z.boolean(),
-    dateFrom: z.date().optional().nullable(),
-    dateTo: z.date().optional().nullable(),
-    whereStayed: z.string().optional(),
-    deportedFromEgyptOrOtherCountry: z.boolean(),
-    deportedDateFrom: z.date().optional().nullable(),
-    deportedDateTo: z.date().optional().nullable(),
-    whoIsPaying: z.string().min(1, 'Please select who is paying'),
-    // Host information
-    hostType: z.string().optional(),
-    hostName: z.string().optional(),
-    hostPhoneNumber: z.string().optional(),
-    hostEmail: z.string().email().optional(),
-    hostAddress: z.string().optional(),
+const kenyaDeclarationSchema = z.object({
+    tripFinanced: z.boolean(),
+    convictedOfOffence: z.boolean(),
+    deniedEntryToKenya: z.boolean(),
+    previousTravelToKenya: z.boolean(),
+    monetaryInstrument: z.boolean(),
+    monetaryInstrumentName: z.string().optional(),
+    monetaryInstrumentCurrency: z.string().optional(),
+    amount: z.string().optional(),
 }).refine(data => {
-    // If visited before is true, require date fields and where stayed
-    if (data.visitedBefore === true) {
-        return !!data.dateFrom && !!data.dateTo && !!data.whereStayed;
+    // If monetaryInstrument is true, require the instrument details
+    if (data.monetaryInstrument === true) {
+        return !!data.monetaryInstrumentName && !!data.monetaryInstrumentCurrency && !!data.amount;
     }
     return true;
 }, {
-    message: "Please provide details about your previous visit",
-    path: ["dateFrom"]
-}).refine(data => {
-    // If deported is true, require deportation date fields
-    if (data.deportedFromEgyptOrOtherCountry === true) {
-        return !!data.deportedDateFrom && !!data.deportedDateTo;
-    }
-    return true;
-}, {
-    message: "Please provide deportation details",
-    path: ["deportedDateFrom"]
-}).refine(data => {
-    // If paying by sponsor, require host information
-    if (data.whoIsPaying === 'By a sponsor (host, company, organization)') {
-        return !!data.hostType && !!data.hostName && !!data.hostPhoneNumber;
-    }
-    return true;
-}, {
-    message: "Host information is required when sponsor is paying",
-    path: ["hostType"]
+    message: "Please provide all monetary instrument details",
+    path: ["monetaryInstrumentName"]
 });
 
-type DeclarationFormValues = z.infer<typeof declarationSchema>;
+type KenyaDeclarationFormValues = z.infer<typeof kenyaDeclarationSchema>;
 
-export default function DeclarationForm() {
-    console.log('DeclarationForm rendering started');
+export default function KenyaDeclarationForm() {
+    console.log('KenyaDeclarationForm rendering started');
 
     const {
         formId,
-        emailAddress,
         updateFormData,
         markStepCompleted,
         setCurrentStep,
         completedSteps,
     } = useFormContext();
 
-    console.log('FormContext values:', { formId, emailAddress, completedSteps });
+    console.log('FormContext values:', { formId, completedSteps });
 
     // Check for missing formId and redirect if needed
     useEffect(() => {
         if (!formId) {
             console.error(
-                'FormId is missing in DeclarationForm, redirecting to first step'
+                'FormId is missing in KenyaDeclarationForm, redirecting to first step'
             );
             // If no formId, go back to the first step
             setCurrentStep('visa-details');
@@ -124,42 +82,35 @@ export default function DeclarationForm() {
     }, [formId, setCurrentStep]);
 
     // Initialize the form
-    const form = useForm<DeclarationFormValues>({
-        resolver: zodResolver(declarationSchema),
+    const form = useForm<KenyaDeclarationFormValues>({
+        resolver: zodResolver(kenyaDeclarationSchema),
         defaultValues: {
-            visitedBefore: false,
-            dateFrom: null,
-            dateTo: null,
-            whereStayed: '',
-            deportedFromEgyptOrOtherCountry: false,
-            deportedDateFrom: null,
-            deportedDateTo: null,
-            whoIsPaying: '',
-            hostType: '',
-            hostName: '',
-            hostPhoneNumber: '',
-            hostEmail: '',
-            hostAddress: '',
+            tripFinanced: false,
+            convictedOfOffence: false,
+            deniedEntryToKenya: false,
+            previousTravelToKenya: false,
+            monetaryInstrument: false,
+            monetaryInstrumentName: '',
+            monetaryInstrumentCurrency: '',
+            amount: '',
         },
     });
 
     console.log('Form initialized');
 
     // Watch form values to conditionally show fields
-    const visitedBefore = form.watch('visitedBefore');
-    const deportedFromEgyptOrOtherCountry = form.watch('deportedFromEgyptOrOtherCountry');
-    const whoIsPaying = form.watch('whoIsPaying');
+    const monetaryInstrument = form.watch('monetaryInstrument');
 
     // Determine if this is an update operation
     const isUpdate = !!formId && completedSteps.includes('declaration');
 
-    console.log('DeclarationForm - formId:', formId);
-    console.log('DeclarationForm - completedSteps:', completedSteps);
-    console.log('DeclarationForm - isUpdate:', isUpdate);
+    console.log('KenyaDeclarationForm - formId:', formId);
+    console.log('KenyaDeclarationForm - completedSteps:', completedSteps);
+    console.log('KenyaDeclarationForm - isUpdate:', isUpdate);
 
     // Fetch the complete visa application if we have a formId
     const { data: applicationData, isLoading: isLoadingApplication } = useQuery({
-        queryKey: ['visa-application', formId],
+        queryKey: ['kenya-visa-application', formId],
         queryFn: () => {
             if (!formId) throw new Error('Form ID is required');
             console.log('Fetching application data for formId:', formId);
@@ -171,7 +122,7 @@ export default function DeclarationForm() {
 
     // Update form values when application data is loaded
     useEffect(() => {
-        console.log('DeclarationForm - applicationData:', applicationData);
+        console.log('KenyaDeclarationForm - applicationData:', applicationData);
         if (applicationData && applicationData.declaration) {
             const declaration = applicationData.declaration;
             console.log('Resetting form with data:', declaration);
@@ -179,19 +130,14 @@ export default function DeclarationForm() {
             // Use setTimeout to ensure the reset happens after the form is fully initialized
             setTimeout(() => {
                 form.reset({
-                    visitedBefore: declaration.visitedBefore || false,
-                    dateFrom: declaration.dateFrom ? new Date(declaration.dateFrom) : null,
-                    dateTo: declaration.dateTo ? new Date(declaration.dateTo) : null,
-                    whereStayed: declaration.whereStayed || '',
-                    deportedFromEgyptOrOtherCountry: declaration.deportedFromEgyptOrOtherCountry || false,
-                    deportedDateFrom: declaration.deportedDateFrom ? new Date(declaration.deportedDateFrom) : null,
-                    deportedDateTo: declaration.deportedDateTo ? new Date(declaration.deportedDateTo) : null,
-                    whoIsPaying: declaration.whoIsPaying || '',
-                    hostType: declaration.hostType || '',
-                    hostName: declaration.hostName || '',
-                    hostPhoneNumber: declaration.hostPhoneNumber || '',
-                    hostEmail: declaration.hostEmail || '',
-                    hostAddress: declaration.hostAddress || '',
+                    tripFinanced: declaration.tripFinanced || false,
+                    convictedOfOffence: declaration.convictedOfOffence || false,
+                    deniedEntryToKenya: declaration.deniedEntryToKenya || false,
+                    previousTravelToKenya: declaration.previousTravelToKenya || false,
+                    monetaryInstrument: declaration.monetaryInstrument || false,
+                    monetaryInstrumentName: declaration.monetaryInstrumentName || '',
+                    monetaryInstrumentCurrency: declaration.monetaryInstrumentCurrency || '',
+                    amount: declaration.amount?.toString() || ''
                 });
             }, 0);
         }
@@ -199,20 +145,24 @@ export default function DeclarationForm() {
 
     // Define the submit mutation
     const mutation = useMutation({
-        mutationFn: async (values: DeclarationFormValues) => {
+        mutationFn: async (values: KenyaDeclarationFormValues) => {
             if (!formId) {
                 throw new Error('Form ID is required');
             }
 
-            console.log('DeclarationForm - Submitting with formId:', formId);
+            console.log('KenyaDeclarationForm - Submitting with formId:', formId);
 
-            // Convert dates to ISO strings for the API
+            // Format the data for the API
             const formattedValues = {
-                ...values,
-                dateFrom: values.dateFrom ? values.dateFrom.toISOString() : null,
-                dateTo: values.dateTo ? values.dateTo.toISOString() : null,
-                deportedDateFrom: values.deportedDateFrom ? values.deportedDateFrom.toISOString() : null,
-                deportedDateTo: values.deportedDateTo ? values.deportedDateTo.toISOString() : null,
+                formId,
+                tripFinanced: values.tripFinanced,
+                convictedOfOffence: values.convictedOfOffence,
+                deniedEntryToKenya: values.deniedEntryToKenya,
+                previousTravelToKenya: values.previousTravelToKenya,
+                monetaryInstrument: values.monetaryInstrument,
+                monetaryInstrumentName: values.monetaryInstrumentName || '',
+                monetaryInstrumentCurrency: values.monetaryInstrumentCurrency || '',
+                amount: values.amount ? parseFloat(values.amount) : undefined
             };
 
             if (isUpdate) {
@@ -225,7 +175,7 @@ export default function DeclarationForm() {
         },
         onSuccess: response => {
             console.log(
-                'DeclarationForm - Submission successful, response:',
+                'KenyaDeclarationForm - Submission successful, response:',
                 response
             );
 
@@ -234,10 +184,10 @@ export default function DeclarationForm() {
             // Mark step as completed
             markStepCompleted('declaration');
             // Move to next step
-            setCurrentStep('review');
+            setCurrentStep('payment');
         },
         onError: error => {
-            console.error('DeclarationForm - Submission error:', error);
+            console.error('KenyaDeclarationForm - Submission error:', error);
             alert(
                 'An error occurred while saving your declaration information. Please try again.'
             );
@@ -245,7 +195,7 @@ export default function DeclarationForm() {
     });
 
     // Handle form submission
-    function onSubmit(values: DeclarationFormValues) {
+    function onSubmit(values: KenyaDeclarationFormValues) {
         console.log('Attempting to submit with values:', values);
         console.log('Form is valid:', form.formState.isValid);
         console.log('Form errors:', form.formState.errors);
@@ -272,23 +222,59 @@ export default function DeclarationForm() {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-4">
-                    <h2 className="text-2xl font-semibold">Declaration Information</h2>
+                    <h2 className="text-2xl font-semibold">Biosecurity & Legal Declaration</h2>
                     <p className="text-muted-foreground">
-                        Please provide information about your travel history and financial arrangements
+                        Please answer a few questions related to biosecurity, customs and law enforcement
                     </p>
                 </div>
 
                 <div className="space-y-6">
-                    {/* Previous Visit to Egypt */}
+                    {/* Travel Financing */}
                     <div className="border p-4 rounded-md space-y-4">
-                        <h3 className="text-lg font-medium">Previous Visits to Egypt</h3>
+                        <h3 className="text-lg font-medium">Travel Financing</h3>
 
                         <FormField
                             control={form.control}
-                            name="visitedBefore"
+                            name="tripFinanced"
                             render={({ field }) => (
                                 <FormItem className="space-y-3">
-                                    <FormLabel>Have you visited Egypt before?</FormLabel>
+                                    <FormLabel>Is your trip financed by a third party, which is not your employer nor a government?</FormLabel>
+                                    <FormControl>
+                                        <RadioGroup
+                                            onValueChange={(value) => field.onChange(value === 'true')}
+                                            defaultValue={field.value ? 'true' : 'false'}
+                                            className="flex flex-row space-x-4"
+                                        >
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="true" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">Yes</FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="false" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">No</FormLabel>
+                                            </FormItem>
+                                        </RadioGroup>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    {/* Legal History */}
+                    <div className="border p-4 rounded-md space-y-4">
+                        <h3 className="text-lg font-medium">Legal History</h3>
+
+                        <FormField
+                            control={form.control}
+                            name="convictedOfOffence"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                    <FormLabel>Have you ever been convicted of any offense in any country?</FormLabel>
                                     <FormControl>
                                         <RadioGroup
                                             onValueChange={(value) => field.onChange(value === 'true')}
@@ -314,118 +300,12 @@ export default function DeclarationForm() {
                             )}
                         />
 
-                        {visitedBefore && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Date From */}
-                                <FormField
-                                    control={form.control}
-                                    name="dateFrom"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-col">
-                                            <FormLabel>From Date</FormLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <FormControl>
-                                                        <Button
-                                                            variant="outline"
-                                                            className={cn(
-                                                                'w-full pl-3 text-left font-normal',
-                                                                !field.value && 'text-muted-foreground'
-                                                            )}
-                                                        >
-                                                            {field.value ? (
-                                                                format(field.value, 'PPP')
-                                                            ) : (
-                                                                <span>Pick a date</span>
-                                                            )}
-                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                        </Button>
-                                                    </FormControl>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={field.value || undefined}
-                                                        onSelect={field.onChange}
-                                                        initialFocus
-                                                        disabled={date => date > new Date()}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Date To */}
-                                <FormField
-                                    control={form.control}
-                                    name="dateTo"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-col">
-                                            <FormLabel>To Date</FormLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <FormControl>
-                                                        <Button
-                                                            variant="outline"
-                                                            className={cn(
-                                                                'w-full pl-3 text-left font-normal',
-                                                                !field.value && 'text-muted-foreground'
-                                                            )}
-                                                        >
-                                                            {field.value ? (
-                                                                format(field.value, 'PPP')
-                                                            ) : (
-                                                                <span>Pick a date</span>
-                                                            )}
-                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                        </Button>
-                                                    </FormControl>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={field.value || undefined}
-                                                        onSelect={field.onChange}
-                                                        initialFocus
-                                                        disabled={date => date > new Date()}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Where Stayed */}
-                                <FormField
-                                    control={form.control}
-                                    name="whereStayed"
-                                    render={({ field }) => (
-                                        <FormItem className="md:col-span-2">
-                                            <FormLabel>Where did you stay?</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Hotel name, address, or location" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Deportation History */}
-                    <div className="border p-4 rounded-md space-y-4">
-                        <h3 className="text-lg font-medium">Deportation History</h3>
-
                         <FormField
                             control={form.control}
-                            name="deportedFromEgyptOrOtherCountry"
+                            name="deniedEntryToKenya"
                             render={({ field }) => (
                                 <FormItem className="space-y-3">
-                                    <FormLabel>Have you ever been deported from Egypt or any other country?</FormLabel>
+                                    <FormLabel>Have you ever been denied entry to Kenya before?</FormLabel>
                                     <FormControl>
                                         <RadioGroup
                                             onValueChange={(value) => field.onChange(value === 'true')}
@@ -451,143 +331,106 @@ export default function DeclarationForm() {
                             )}
                         />
 
-                        {deportedFromEgyptOrOtherCountry && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Deportation Date From */}
-                                <FormField
-                                    control={form.control}
-                                    name="deportedDateFrom"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-col">
-                                            <FormLabel>Deportation From Date</FormLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <FormControl>
-                                                        <Button
-                                                            variant="outline"
-                                                            className={cn(
-                                                                'w-full pl-3 text-left font-normal',
-                                                                !field.value && 'text-muted-foreground'
-                                                            )}
-                                                        >
-                                                            {field.value ? (
-                                                                format(field.value, 'PPP')
-                                                            ) : (
-                                                                <span>Pick a date</span>
-                                                            )}
-                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                        </Button>
-                                                    </FormControl>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={field.value || undefined}
-                                                        onSelect={field.onChange}
-                                                        initialFocus
-                                                        disabled={date => date > new Date()}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Deportation Date To */}
-                                <FormField
-                                    control={form.control}
-                                    name="deportedDateTo"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-col">
-                                            <FormLabel>Deportation To Date</FormLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <FormControl>
-                                                        <Button
-                                                            variant="outline"
-                                                            className={cn(
-                                                                'w-full pl-3 text-left font-normal',
-                                                                !field.value && 'text-muted-foreground'
-                                                            )}
-                                                        >
-                                                            {field.value ? (
-                                                                format(field.value, 'PPP')
-                                                            ) : (
-                                                                <span>Pick a date</span>
-                                                            )}
-                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                        </Button>
-                                                    </FormControl>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={field.value || undefined}
-                                                        onSelect={field.onChange}
-                                                        initialFocus
-                                                        disabled={date => date > new Date()}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        )}
+                        <FormField
+                            control={form.control}
+                            name="previousTravelToKenya"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                    <FormLabel>Have you traveled to Kenya before?</FormLabel>
+                                    <FormControl>
+                                        <RadioGroup
+                                            onValueChange={(value) => field.onChange(value === 'true')}
+                                            defaultValue={field.value ? 'true' : 'false'}
+                                            className="flex flex-row space-x-4"
+                                        >
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="true" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">Yes</FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="false" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">No</FormLabel>
+                                            </FormItem>
+                                        </RadioGroup>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
 
-                    {/* Financial Arrangements */}
+                    {/* Currency/Monetary Instruments */}
                     <div className="border p-4 rounded-md space-y-4">
-                        <h3 className="text-lg font-medium">Financial Arrangements</h3>
+                        <h3 className="text-lg font-medium">Currency & Monetary Instruments</h3>
 
                         <FormField
                             control={form.control}
-                            name="whoIsPaying"
+                            name="monetaryInstrument"
                             render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Who is paying for travel and accommodation costs?</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select who is paying" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {payingOptions.map(option => (
-                                                <SelectItem key={option} value={option}>
-                                                    {option}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                <FormItem className="space-y-3">
+                                    <FormLabel>Will you be bringing into Republic of Kenya currency or monetary instruments of a value greater than $10,000 or foreign equivalent?</FormLabel>
+                                    <FormControl>
+                                        <RadioGroup
+                                            onValueChange={(value) => field.onChange(value === 'true')}
+                                            defaultValue={field.value ? 'true' : 'false'}
+                                            className="flex flex-row space-x-4"
+                                        >
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="true" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">Yes</FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="false" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">No</FormLabel>
+                                            </FormItem>
+                                        </RadioGroup>
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
 
-                        {whoIsPaying === 'By a sponsor (host, company, organization)' && (
-                            <div className="space-y-4">
-                                <h4 className="text-md font-medium">Host Information</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Host Type */}
+                        {monetaryInstrument && (
+                            <div className="p-4 bg-slate-50 rounded-md">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <FormField
                                         control={form.control}
-                                        name="hostType"
+                                        name="monetaryInstrumentName"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Host Type</FormLabel>
+                                                <FormLabel>Type</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. Cash, Money Order, Traveller's Cheque" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="monetaryInstrumentCurrency"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Currency</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl>
                                                         <SelectTrigger>
-                                                            <SelectValue placeholder="Select host type" />
+                                                            <SelectValue placeholder="Select currency" />
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {hostTypes.map(type => (
-                                                            <SelectItem key={type} value={type}>
-                                                                {type}
+                                                        {currencies.map(currency => (
+                                                            <SelectItem key={currency} value={currency}>
+                                                                {currency}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -597,60 +440,14 @@ export default function DeclarationForm() {
                                         )}
                                     />
 
-                                    {/* Host Name */}
                                     <FormField
                                         control={form.control}
-                                        name="hostName"
+                                        name="amount"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Host Name</FormLabel>
+                                                <FormLabel>Amount</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="Enter host name" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    {/* Host Phone Number */}
-                                    <FormField
-                                        control={form.control}
-                                        name="hostPhoneNumber"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Host Phone Number</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Enter host phone number" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    {/* Host Email */}
-                                    <FormField
-                                        control={form.control}
-                                        name="hostEmail"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Host Email</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Enter host email" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    {/* Host Address */}
-                                    <FormField
-                                        control={form.control}
-                                        name="hostAddress"
-                                        render={({ field }) => (
-                                            <FormItem className="md:col-span-2">
-                                                <FormLabel>Host Address</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Enter host address" {...field} />
+                                                    <Input type="number" placeholder="Amount" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -670,7 +467,7 @@ export default function DeclarationForm() {
                     >
                         Previous
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" disabled={mutation.isPending}>
                         {mutation.isPending
                             ? 'Submitting...'
                             : isUpdate

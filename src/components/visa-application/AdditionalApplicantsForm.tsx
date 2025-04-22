@@ -54,6 +54,9 @@ import { visaApi } from '@/lib/api/endpoints';
 // Define marital status options
 const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
 
+// Define gender options
+const genderOptions = ['Male', 'Female', 'Other'];
+
 // Define passport type options
 const passportTypes = [
   'Regular/Ordinary',
@@ -94,12 +97,24 @@ const additionalApplicantSchema = z.object({
     .string()
     .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
   occupation: z.string().min(1, 'Occupation is required'),
+  // Address fields
+  streetAddress: z.string().min(1, 'Street address is required'),
+  addressCity: z.string().min(1, 'City is required'),
+  addressCountry: z.string().min(1, 'Country is required'),
+  // Emergency contact fields
+  emergencyContactName: z.string().min(1, 'Emergency contact name is required'),
+  emergencyContactPhone: z
+    .string()
+    .refine(isValidPhoneNumber, { message: 'Invalid emergency contact phone number' }),
 
   // Passport Info fields
   passportType: z.string().min(1, 'Passport type is required'),
   passportNumber: z.string().min(1, 'Passport number is required'),
   passportIssueDate: z.date({ required_error: 'Issue date is required' }),
-  passportExpiryDate: z.date({ required_error: 'Expiry date is required' }),
+  passportExpiryDate: z.date({ required_error: 'Expiry date is required' })
+    .refine(date => date > new Date(), {
+      message: 'Passport must not be expired',
+    }),
   passportIssuingCountry: z.string().min(1, 'Issuing country is required')
 });
 
@@ -121,6 +136,9 @@ interface ApplicantInfo {
     streetAddress: string;
     addressCity: string;
     addressCountry: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    maritalStatus: string;
     [key: string]: unknown;
   };
   passportInfo: {
@@ -129,7 +147,6 @@ interface ApplicantInfo {
     passportIssueDate: string;
     passportExpiryDate: string;
     passportIssuingCountry: string;
-    passportIssuingAuthority: string;
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -179,7 +196,12 @@ export default function AdditionalApplicantsForm() {
       email: '',
       phoneNumber: '',
       occupation: '',
-      passportType: 'Ordinary',
+      streetAddress: '',
+      addressCity: '',
+      addressCountry: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      passportType: 'Regular/Ordinary',
       passportNumber: '',
       passportIssueDate: undefined,
       passportExpiryDate: undefined,
@@ -333,6 +355,14 @@ export default function AdditionalApplicantsForm() {
               <span className="font-medium">Address:</span>{' '}
               {personalInfo.streetAddress}, {personalInfo.addressCity},{' '}
               {personalInfo.addressCountry}
+            </div>
+            <div>
+              <span className="font-medium">Emergency Contact:</span>{' '}
+              {personalInfo.emergencyContactName}
+            </div>
+            <div>
+              <span className="font-medium">Emergency Phone:</span>{' '}
+              {personalInfo.emergencyContactPhone}
             </div>
           </div>
         </CardContent>
@@ -534,9 +564,11 @@ export default function AdditionalApplicantsForm() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
+                              {genderOptions.map(option => (
+                                <SelectItem key={option} value={option.toLowerCase()}>
+                                  {option}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -578,10 +610,6 @@ export default function AdditionalApplicantsForm() {
                         <FormItem>
                           <FormLabel>Citizenship</FormLabel>
                           <FormControl>
-                            {/* <Input
-                              placeholder="Country of citizenship"
-                              {...field}
-                            /> */}
                             <CountryDropdown
                               placeholder="Select citizenship"
                               defaultValue={field.value}
@@ -604,7 +632,6 @@ export default function AdditionalApplicantsForm() {
                         <FormItem>
                           <FormLabel>Country of Birth</FormLabel>
                           <FormControl>
-                            {/* <Input placeholder="Country of birth" {...field} /> */}
                             <CountryDropdown
                               placeholder="Select country of birth"
                               defaultValue={field.value}
@@ -661,7 +688,6 @@ export default function AdditionalApplicantsForm() {
                         <FormItem>
                           <FormLabel>Phone Number</FormLabel>
                           <FormControl>
-                            {/* <Input placeholder="Phone number" {...field} /> */}
                             <PhoneInput
                               placeholder="Enter a phone number"
                               {...field}
@@ -681,6 +707,88 @@ export default function AdditionalApplicantsForm() {
                           <FormLabel>Occupation</FormLabel>
                           <FormControl>
                             <Input placeholder="Occupation" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Street Address */}
+                    <FormField
+                      control={form.control}
+                      name="streetAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Street Address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Street address" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* City */}
+                    <FormField
+                      control={form.control}
+                      name="addressCity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <Input placeholder="City" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Country */}
+                    <FormField
+                      control={form.control}
+                      name="addressCountry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Country</FormLabel>
+                          <FormControl>
+                            <CountryDropdown
+                              placeholder="Select country"
+                              defaultValue={field.value}
+                              onChange={country => {
+                                field.onChange(country.name);
+                              }}
+                              name={field.name}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Emergency Contact Name */}
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Emergency contact name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Emergency Contact Phone */}
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Phone</FormLabel>
+                          <FormControl>
+                            <PhoneInput placeholder="Emergency contact phone" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -806,6 +914,7 @@ export default function AdditionalApplicantsForm() {
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
                               <Calendar
+                                variant="passport-expiry"
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
@@ -818,8 +927,7 @@ export default function AdditionalApplicantsForm() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Issuing Country */}
+                    {/* Passport Issuing Country */}
                     <FormField
                       control={form.control}
                       name="passportIssuingCountry"
@@ -827,7 +935,10 @@ export default function AdditionalApplicantsForm() {
                         <FormItem>
                           <FormLabel>Issuing Country</FormLabel>
                           <FormControl>
-                            <Input placeholder="Country" {...field} />
+                            <Input
+                              placeholder="Country that issued passport"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

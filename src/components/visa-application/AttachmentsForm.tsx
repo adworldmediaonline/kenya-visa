@@ -697,7 +697,7 @@ export default function AttachmentsForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => setCurrentStep('additional-applicants')}
+          onClick={() => setCurrentStep('review')}
         >
           Previous
         </Button>
