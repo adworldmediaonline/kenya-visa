@@ -212,7 +212,7 @@ export default function PaymentForm() {
             key: orderData.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
             amount: orderData.amount * 100, // Razorpay expects amount in paise
             currency: orderData.currency || 'USD',
-            name: 'Ethiopia Visa Services',
+            name: 'Kenya eTA Services',
             description: 'Visa Application Fee',
             order_id: orderData.orderId,
             handler: function (response: RazorpayResponse) {

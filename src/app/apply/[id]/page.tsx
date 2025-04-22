@@ -42,7 +42,7 @@ export default function ResumeApplicationPage() {
 
     if (error) {
         return (
-            <MainLayout title="Application Error - Ethiopia Visa">
+            <MainLayout title="Application Error - Kenya eTA">
                 <div className="container mx-auto py-16 px-4">
                     <div className="max-w-lg mx-auto text-center">
                         <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Application</h1>
@@ -62,7 +62,7 @@ export default function ResumeApplicationPage() {
     }
 
     return (
-        <MainLayout title="Loading Application - Ethiopia Visa">
+        <MainLayout title="Loading Application - Kenya eTA">
             <div className="container mx-auto py-20 px-4">
                 <div className="max-w-lg mx-auto text-center">
                     <h1 className="text-2xl font-bold mb-6">Retrieving Your Application</h1>

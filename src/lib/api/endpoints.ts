@@ -80,19 +80,15 @@ export interface VerifyPaymentRequest {
 
 // Declaration info interfaces
 export interface DeclarationInfoData {
-  visitedBefore: boolean;
-  dateFrom?: Date | string | null;
-  dateTo?: Date | string | null;
-  whereStayed?: string;
-  deportedFromEgyptOrOtherCountry: boolean;
-  deportedDateFrom?: Date | string | null;
-  deportedDateTo?: Date | string | null;
-  whoIsPaying: string;
-  hostType?: string;
-  hostName?: string;
-  hostPhoneNumber?: string;
-  hostEmail?: string;
-  hostAddress?: string;
+  tripFinanced: boolean;
+  convictedOfOffence: boolean;
+  deniedEntryToKenya: boolean;
+  previousTravelToKenya: boolean;
+  monetaryInstrument: boolean;
+  monetaryInstrumentName?: string;
+  monetaryInstrumentCurrency?: string;
+  amount?: number | string | null;
+  formId?: string;
 }
 
 export const visaApi = {
